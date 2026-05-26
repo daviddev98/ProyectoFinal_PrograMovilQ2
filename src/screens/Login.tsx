@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
+// @ts-ignore
 import './Login.css';
-
 const DOMINIOS_VALIDOS = ['@gmail.com', '@unitec.edu', '@hotmail.com', '@outlook.com'];
 
 const Login: React.FC = () => {
