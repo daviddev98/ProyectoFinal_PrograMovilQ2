@@ -22,7 +22,8 @@
     "jsx": "react-jsx"
   },
   "include": [
-    "src"
-, "App.tsx"  ],
+    "src",
+    "App.tsx"
+  ],
   "extends": "expo/tsconfig.base"
 }
