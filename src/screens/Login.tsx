@@ -1,6 +1,15 @@
 import React, { useState } from 'react';
-// @ts-ignore
-import './Login.css';
+import {
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
+
 const DOMINIOS_VALIDOS = ['@gmail.com', '@unitec.edu', '@hotmail.com', '@outlook.com'];
 
 const Login: React.FC = () => {
@@ -8,18 +17,7 @@ const Login: React.FC = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const valor = e.target.value;
-    if (valor.length > password.length) {
-      const nuevos = valor.slice(password.length).replace(/\*/g, '');
-      setPassword(password + nuevos);
-    } else {
-      setPassword(password.slice(0, valor.length));
-    }
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = () => {
     setError('');
 
     if (!usuario.trim() || !password.trim()) {
@@ -38,40 +36,89 @@ const Login: React.FC = () => {
       return;
     }
 
-    alert('Inicio de sesión exitoso');
+    Alert.alert('Éxito', 'Inicio de sesión exitoso');
   };
 
   return (
-    <div className="login-container">
-      <form className="login-form" onSubmit={handleSubmit} noValidate>
-        <label className="login-title">Iniciar sesión</label>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <View style={styles.form}>
+        <Text style={styles.title}>Iniciar sesión</Text>
 
-        <input
-          type="text"
+        <TextInput
           placeholder="Usuario"
           value={usuario}
-          onChange={(e) => setUsuario(e.target.value)}
-          className="login-input"
-          autoComplete="username"
+          onChangeText={setUsuario}
+          style={styles.input}
+          autoCapitalize="none"
+          autoComplete="email"
+          keyboardType="email-address"
         />
 
-        <input
-          type="text"
+        <TextInput
           placeholder="Contraseña"
-          value={'*'.repeat(password.length)}
-          onChange={handlePasswordChange}
-          className="login-input"
-          autoComplete="off"
+          value={password}
+          onChangeText={setPassword}
+          style={styles.input}
+          secureTextEntry
+          autoCapitalize="none"
         />
 
-        {error && <span className="login-error">{error}</span>}
+        {error ? <Text style={styles.error}>{error}</Text> : null}
 
-        <button type="submit" className="login-button">
-          Entrar
-        </button>
-      </form>
-    </div>
+        <Pressable style={styles.button} onPress={handleSubmit}>
+          <Text style={styles.buttonText}>Entrar</Text>
+        </Pressable>
+      </View>
+    </KeyboardAvoidingView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#ffffff',
+  },
+  form: {
+    width: '100%',
+    maxWidth: 320,
+    padding: 24,
+    gap: 14,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: '500',
+    color: '#111111',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  input: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#cccccc',
+    paddingVertical: 8,
+    fontSize: 14,
+    color: '#111111',
+  },
+  error: {
+    color: '#c00000',
+    fontSize: 12,
+    marginTop: 2,
+  },
+  button: {
+    marginTop: 12,
+    padding: 10,
+    borderRadius: 4,
+    backgroundColor: '#111111',
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: '#ffffff',
+    fontSize: 14,
+  },
+});
 
 export default Login;
