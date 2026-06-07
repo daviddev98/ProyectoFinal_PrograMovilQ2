@@ -9,14 +9,14 @@ type Props = {
   title: string;
   showBack?: boolean;
   onBackPress?: () => void;
-  onMenuPress?: () => void;
+  onSettingsPress?: () => void;
 };
 
 export default function ScreenHeader({
   title,
   showBack = true,
   onBackPress,
-  onMenuPress,
+  onSettingsPress,
 }: Props) {
   return (
     <View style={styles.container}>
@@ -32,9 +32,13 @@ export default function ScreenHeader({
         {title}
       </Text>
 
-      <Button variant="outline" size="icon" onPress={onMenuPress}>
-        <Ionicons name="ellipsis-horizontal" size={18} color={colors.foreground} />
-      </Button>
+      {onSettingsPress ? (
+        <Button variant="outline" size="icon" onPress={onSettingsPress}>
+          <Ionicons name="settings-outline" size={18} color={colors.foreground} />
+        </Button>
+      ) : (
+        <View style={styles.placeholder} />
+      )}
     </View>
   );
 }

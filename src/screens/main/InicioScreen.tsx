@@ -1,30 +1,58 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import InstallmentCard from '../../components/InstallmentCard';
+import MonthSelector from '../../components/MonthSelector';
 import ScreenHeader from '../../components/ScreenHeader';
 import SpendingChart from '../../components/SpendingChart';
 import StatCard from '../../components/StatCard';
 import { Tabs, TabsContent, TabsList, TabsTrigger, Text } from '../../components/ui';
 import {
-  chartData,
-  chartHighlight,
-  installments4,
-  installments6,
-  spendingSummary,
+  availableMonthKeys,
+  getMonthSpendingData,
+  installmentsMovimientos,
+  installmentsPagos,
 } from '../../constants/sampleData';
 import { colors, radius, spacing } from '../../constants/theme';
+import { RootStackParamList } from '../../types/navigation';
+import { formatLPS } from '../../utils/currency';
+import { getMonthKey } from '../../utils/date';
 
-function formatCurrency(value: number) {
-  return `$ ${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+function getInitialMonth(): Date {
+  const now = new Date();
+  const currentKey = getMonthKey(now);
+
+  if (availableMonthKeys.includes(currentKey)) {
+    return now;
+  }
+
+  const lastKey = availableMonthKeys[availableMonthKeys.length - 1];
+  const [year, month] = lastKey.split('-');
+  return new Date(Number(year), Number(month) - 1, 1);
 }
 
 export default function InicioScreen() {
-  const [installmentTab, setInstallmentTab] = useState('4');
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const [activeTab, setActiveTab] = useState('movimientos');
+  const [selectedMonth, setSelectedMonth] = useState(getInitialMonth);
+
+  const monthKey = getMonthKey(selectedMonth);
+  const monthData = useMemo(() => getMonthSpendingData(monthKey), [monthKey]);
+
+  const currentMonthIndex = availableMonthKeys.indexOf(monthKey);
+  const canGoPrev = currentMonthIndex > 0;
+  const canGoNext =
+    currentMonthIndex !== -1 && currentMonthIndex < availableMonthKeys.length - 1;
 
   const handlePayNow = (name: string) => {
     Alert.alert('Pago simulado', `Procesando pago de ${name} (datos de muestra).`);
+  };
+
+  const handleOpenSettings = () => {
+    navigation.navigate('Configuracion');
   };
 
   return (
@@ -34,36 +62,47 @@ export default function InicioScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <ScreenHeader title="Analytics" showBack={false} />
+        <ScreenHeader
+          title="Estadística"
+          showBack={false}
+          onSettingsPress={handleOpenSettings}
+        />
 
-        <Text variant="label">Total Spending</Text>
+        <MonthSelector
+          selectedDate={selectedMonth}
+          onChange={setSelectedMonth}
+          canGoPrev={canGoPrev}
+          canGoNext={canGoNext}
+        />
+
+        <Text variant="label">Gasto total</Text>
         <Text variant="title" style={styles.totalSpending}>
-          {formatCurrency(spendingSummary.totalSpending)}
+          {formatLPS(monthData.totalSpending)}
         </Text>
 
         <SpendingChart
-          data={chartData}
-          highlightAmount={chartHighlight.amount}
-          highlightDate={chartHighlight.date}
-          startLabel="Nov 1, 2025"
-          endLabel="Nov 30, 2025"
+          data={monthData.chartData}
+          highlightAmount={monthData.chartHighlight.amount}
+          highlightDate={monthData.chartHighlight.date}
+          startLabel={monthData.startLabel}
+          endLabel={monthData.endLabel}
         />
 
         <View style={styles.statsRow}>
-          <StatCard label="On Progress" amount={spendingSummary.onProgress} />
-          <StatCard label="Overdue" amount={spendingSummary.overdue} highlight />
-          <StatCard label="Total" amount={spendingSummary.total} />
+          <StatCard label="Ingresos" amount={monthData.ingresos} />
+          <StatCard label="Gastos" amount={monthData.gastos} highlight />
+          <StatCard label="Total" amount={monthData.total} />
         </View>
 
         <View style={styles.installmentsPanel}>
-          <Tabs value={installmentTab} onValueChange={setInstallmentTab}>
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList>
-              <TabsTrigger value="4" title="4 Installment" />
-              <TabsTrigger value="6" title="6 Installment" />
+              <TabsTrigger value="movimientos" title="Movimientos" />
+              <TabsTrigger value="pagos-programados" title="Pagos programados" />
             </TabsList>
 
-            <TabsContent value="4">
-              {installments4.map((item) => (
+            <TabsContent value="movimientos">
+              {installmentsMovimientos.map((item) => (
                 <InstallmentCard
                   key={item.id}
                   item={item}
@@ -72,8 +111,8 @@ export default function InicioScreen() {
               ))}
             </TabsContent>
 
-            <TabsContent value="6">
-              {installments6.map((item) => (
+            <TabsContent value="pagos-programados">
+              {installmentsPagos.map((item) => (
                 <InstallmentCard
                   key={item.id}
                   item={item}

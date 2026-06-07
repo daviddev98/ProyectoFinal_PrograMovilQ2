@@ -12,20 +12,17 @@ import {
   isRequired,
   isValidEmail,
   isValidPassword,
-  isValidPhone,
 } from '../utils/validation';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
 
 type FormErrors = {
   usuario?: string;
-  telefono?: string;
   password?: string;
 };
 
 export default function LoginScreen({ navigation }: Props) {
   const [usuario, setUsuario] = useState('');
-  const [telefono, setTelefono] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<FormErrors>({});
 
@@ -39,12 +36,6 @@ export default function LoginScreen({ navigation }: Props) {
     } else if (!hasValidDomain(usuario)) {
       nextErrors.usuario =
         'El correo debe ser @gmail.com, @unitec.edu, @hotmail.com o @outlook.com.';
-    }
-
-    if (!isRequired(telefono)) {
-      nextErrors.telefono = 'El teléfono es obligatorio.';
-    } else if (!isValidPhone(telefono)) {
-      nextErrors.telefono = 'Ingresa un teléfono válido (8 a 15 dígitos).';
     }
 
     if (!isRequired(password)) {
@@ -81,14 +72,6 @@ export default function LoginScreen({ navigation }: Props) {
           value={usuario}
           onChange={setUsuario}
           error={errors.usuario}
-        />
-
-        <CustomInput
-          type="phone"
-          placeholder="Teléfono"
-          value={telefono}
-          onChange={setTelefono}
-          error={errors.telefono}
         />
 
         <CustomInput

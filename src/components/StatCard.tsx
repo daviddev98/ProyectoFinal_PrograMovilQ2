@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet } from 'react-native';
 
+import { formatLPS } from '../utils/currency';
 import { Card, CardContent, Text } from './ui';
 
 type Props = {
@@ -9,17 +10,13 @@ type Props = {
   highlight?: boolean;
 };
 
-function formatCurrency(value: number) {
-  return `$ ${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-}
-
 export default function StatCard({ label, amount, highlight = false }: Props) {
   return (
     <Card style={[styles.card, highlight && styles.highlight]}>
       <CardContent style={styles.content}>
         <Text variant="label">{label}</Text>
         <Text variant="default" style={styles.amount}>
-          {formatCurrency(amount)}
+          {formatLPS(amount)}
         </Text>
       </CardContent>
     </Card>

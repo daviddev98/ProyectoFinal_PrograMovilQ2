@@ -4,6 +4,7 @@ import Svg, { Circle, Defs, Line, LinearGradient, Path, Stop } from 'react-nativ
 
 import { colors, radius, shadows } from '../constants/theme';
 import { ChartPoint } from '../constants/sampleData';
+import { formatLPS } from '../utils/currency';
 import { Card, Text } from './ui';
 
 type Props = {
@@ -91,7 +92,7 @@ export default function SpendingChart({
 
       <Card style={[styles.tooltip, { left: highlightPoint.x - 48, top: highlightPoint.y - 58 }]}>
         <Text variant="default" style={styles.tooltipAmount}>
-          ${highlightAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+          {formatLPS(highlightAmount)}
         </Text>
         <Text variant="muted">{highlightDate}</Text>
       </Card>

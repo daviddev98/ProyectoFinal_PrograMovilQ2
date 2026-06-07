@@ -4,16 +4,13 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { colors, radius } from '../constants/theme';
 import { InstallmentItem } from '../constants/sampleData';
+import { formatLPS } from '../utils/currency';
 import { Button, Card, CardContent, Text } from './ui';
 
 type Props = {
   item: InstallmentItem;
   onPayNow?: () => void;
 };
-
-function formatCurrency(value: number) {
-  return `$${value.toFixed(2)}`;
-}
 
 export default function InstallmentCard({ item, onPayNow }: Props) {
   const isOverdue = item.dueDate < 20;
@@ -33,7 +30,7 @@ export default function InstallmentCard({ item, onPayNow }: Props) {
 
           <View style={styles.amountBlock}>
             <Text variant="default" style={styles.amount}>
-              {formatCurrency(item.amount)}
+              {formatLPS(item.amount)}
             </Text>
             <Text variant="muted">Due date {item.dueDate}</Text>
           </View>

@@ -19,44 +19,110 @@ export type InstallmentItem = {
   image: ImageSourcePropType;
 };
 
-export const spendingSummary = {
-  totalSpending: 248967.83,
-  onProgress: 61523.0,
-  overdue: 4825.43,
-  total: 89271.92,
+export type MonthSpendingData = {
+  totalSpending: number;
+  ingresos: number;
+  gastos: number;
+  total: number;
+  chartData: ChartPoint[];
+  chartHighlight: {
+    amount: number;
+    date: string;
+  };
+  startLabel: string;
+  endLabel: string;
 };
 
-export const chartData: ChartPoint[] = [
-  { label: 'Nov 1', value: 1200 },
-  { label: 'Nov 5', value: 1800 },
-  { label: 'Nov 10', value: 2400 },
-  { label: 'Nov 15', value: 3100 },
-  { label: 'Nov 20', value: 3600 },
-  { label: 'Nov 25', value: 4274 },
-  { label: 'Nov 30', value: 4800 },
-];
-
-export const chartHighlight = {
-  amount: 4274.0,
-  date: 'Nov 25, 2025',
+export const monthlySpendingData: Record<string, MonthSpendingData> = {
+  '2026-04': {
+    totalSpending: 9850.5,
+    ingresos: 3200.0,
+    gastos: 1450.25,
+    total: 6200.25,
+    chartData: [
+      { label: 'Abr 1', value: 420 },
+      { label: 'Abr 7', value: 680 },
+      { label: 'Abr 14', value: 910 },
+      { label: 'Abr 21', value: 1180 },
+      { label: 'Abr 28', value: 1320 },
+    ],
+    chartHighlight: { amount: 1180.0, date: '21 abr, 2026' },
+    startLabel: '1 abr, 2026',
+    endLabel: '30 abr, 2026',
+  },
+  '2026-05': {
+    totalSpending: 11240.75,
+    ingresos: 3850.0,
+    gastos: 1620.5,
+    total: 7450.25,
+    chartData: [
+      { label: 'May 1', value: 510 },
+      { label: 'May 8', value: 740 },
+      { label: 'May 15', value: 980 },
+      { label: 'May 22', value: 1210 },
+      { label: 'May 29', value: 1380 },
+    ],
+    chartHighlight: { amount: 1210.0, date: '22 may, 2026' },
+    startLabel: '1 may, 2026',
+    endLabel: '31 may, 2026',
+  },
+  '2026-06': {
+    totalSpending: 12450.0,
+    ingresos: 4200.0,
+    gastos: 1850.75,
+    total: 8350.25,
+    chartData: [
+      { label: 'Jun 1', value: 580 },
+      { label: 'Jun 8', value: 820 },
+      { label: 'Jun 15', value: 1050 },
+      { label: 'Jun 22', value: 1280 },
+      { label: 'Jun 29', value: 1420 },
+    ],
+    chartHighlight: { amount: 1280.0, date: '22 jun, 2026' },
+    startLabel: '1 jun, 2026',
+    endLabel: '30 jun, 2026',
+  },
 };
 
-export const installments4: InstallmentItem[] = [
+export const installmentsMovimientos: InstallmentItem[] = [
   {
     id: '1',
+    name: 'Supermercado',
+    source: 'La Colonia',
+    amount: 845.5,
+    dueDate: 12,
+    currentInstallment: 1,
+    totalInstallments: 1,
+    image: cameraImage,
+  },
+  {
+    id: '2',
+    name: 'Transporte',
+    source: 'Uber',
+    amount: 120.0,
+    dueDate: 18,
+    currentInstallment: 1,
+    totalInstallments: 1,
+    image: ps5Image,
+  },
+];
+
+export const installmentsPagos: InstallmentItem[] = [
+  {
+    id: '3',
     name: 'PS5',
-    source: 'Amazon.com',
-    amount: 836.94,
+    source: 'Tienda Premier',
+    amount: 3250.0,
     dueDate: 18,
     currentInstallment: 1,
     totalInstallments: 4,
     image: ps5Image,
   },
   {
-    id: '2',
-    name: 'Nikon Camera',
-    source: 'Amazon.com',
-    amount: 997.0,
+    id: '4',
+    name: 'Cámara Nikon',
+    source: 'Photo Express',
+    amount: 2180.5,
     dueDate: 25,
     currentInstallment: 2,
     totalInstallments: 4,
@@ -64,25 +130,8 @@ export const installments4: InstallmentItem[] = [
   },
 ];
 
-export const installments6: InstallmentItem[] = [
-  {
-    id: '3',
-    name: 'MacBook Air',
-    source: 'Apple.com',
-    amount: 1299.0,
-    dueDate: 12,
-    currentInstallment: 3,
-    totalInstallments: 6,
-    image: cameraImage,
-  },
-  {
-    id: '4',
-    name: 'PS5',
-    source: 'Amazon.com',
-    amount: 836.94,
-    dueDate: 18,
-    currentInstallment: 1,
-    totalInstallments: 6,
-    image: ps5Image,
-  },
-];
+export function getMonthSpendingData(monthKey: string): MonthSpendingData {
+  return monthlySpendingData[monthKey] ?? monthlySpendingData['2026-06'];
+}
+
+export const availableMonthKeys = Object.keys(monthlySpendingData).sort();
