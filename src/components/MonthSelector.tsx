@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-import { colors, radius } from '../constants/theme';
+import { useAppSettings } from '../context/AppSettingsContext';
+import { ThemeColors } from '../constants/themes';
+import { radius } from '../constants/theme';
 import { getMonthLabel, shiftMonth } from '../utils/date';
 import { Text } from './ui';
 
@@ -19,6 +21,9 @@ export default function MonthSelector({
   canGoPrev = true,
   canGoNext = true,
 }: Props) {
+  const { colors } = useAppSettings();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   return (
     <View style={styles.container}>
       <Pressable
@@ -46,35 +51,36 @@ export default function MonthSelector({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: colors.card,
-    borderRadius: radius.full,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: 4,
-    marginBottom: 12,
-  },
-  arrowButton: {
-    width: 36,
-    height: 36,
-    borderRadius: radius.full,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.secondary,
-  },
-  labelContainer: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  label: {
-    fontWeight: '600',
-    fontSize: 14,
-  },
-  disabled: {
-    opacity: 0.35,
-  },
-});
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    container: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      backgroundColor: colors.card,
+      borderRadius: radius.full,
+      borderWidth: 1,
+      borderColor: colors.border,
+      padding: 4,
+      marginBottom: 12,
+    },
+    arrowButton: {
+      width: 36,
+      height: 36,
+      borderRadius: radius.full,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.secondary,
+    },
+    labelContainer: {
+      flex: 1,
+      alignItems: 'center',
+    },
+    label: {
+      fontWeight: '600',
+      fontSize: 14,
+    },
+    disabled: {
+      opacity: 0.35,
+    },
+  });

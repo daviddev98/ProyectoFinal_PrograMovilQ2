@@ -4,7 +4,7 @@
     "slug": "control-de-gastos",
     "version": "1.0.0",
     "orientation": "portrait",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "splash": {
       "backgroundColor": "#ffffff"
     },
@@ -18,6 +18,14 @@
     },
     "web": {
       "bundler": "metro"
-    }
+    },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "La app necesita acceso a tus fotos para configurar tu perfil."
+        }
+      ]
+    ]
   }
 }

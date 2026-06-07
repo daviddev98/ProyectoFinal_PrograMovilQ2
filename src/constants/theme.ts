@@ -1,21 +1,6 @@
-export const colors = {
-  background: '#F3F4F6',
-  foreground: '#111827',
-  card: '#FFFFFF',
-  muted: '#9CA3AF',
-  mutedForeground: '#6B7280',
-  primary: '#3B82F6',
-  primaryForeground: '#FFFFFF',
-  secondary: '#E5E7EB',
-  secondaryForeground: '#374151',
-  destructive: '#DC2626',
-  border: '#E5E7EB',
-  accent: '#EFF6FF',
-  tabBar: '#1F2937',
-  tabBarActive: '#374151',
-  success: '#16A34A',
-  warning: '#F59E0B',
-} as const;
+import { lightColors } from './themes';
+
+export const colors = lightColors;
 
 export const spacing = {
   xs: 4,

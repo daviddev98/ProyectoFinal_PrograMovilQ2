@@ -1,5 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Text, TouchableOpacity, StyleSheet } from 'react-native';
+
+import { useAppSettings } from '../context/AppSettingsContext';
+import { ThemeColors } from '../constants/themes';
 
 type CustomButtonProps = {
   title: string;
@@ -7,9 +10,14 @@ type CustomButtonProps = {
   variant?: 'primary' | 'secondary' | 'transparent';
 };
 
-export default function CustomButton({ title, onPress, variant = 'primary' }: CustomButtonProps) {
-  const styles = getStyles(variant);
-  
+export default function CustomButton({
+  title,
+  onPress,
+  variant = 'primary',
+}: CustomButtonProps) {
+  const { colors } = useAppSettings();
+  const styles = useMemo(() => createStyles(colors, variant), [colors, variant]);
+
   return (
     <TouchableOpacity style={styles.button} onPress={onPress}>
       <Text style={styles.buttonText}>{title}</Text>
@@ -17,7 +25,7 @@ export default function CustomButton({ title, onPress, variant = 'primary' }: Cu
   );
 }
 
-const getStyles = (variant: 'primary' | 'secondary' | 'transparent') =>
+const createStyles = (colors: ThemeColors, variant: 'primary' | 'secondary' | 'transparent') =>
   StyleSheet.create({
     button: {
       marginTop: 12,
@@ -25,15 +33,21 @@ const getStyles = (variant: 'primary' | 'secondary' | 'transparent') =>
       borderRadius: 4,
       alignItems: 'center',
       width: '100%',
-      backgroundColor: 
-        variant === 'primary' ? '#111111' : 
-        variant === 'secondary' ? '#cccccc' : 
-        'transparent',
-      borderWidth: variant === 'transparent' ? 0 : 0,
+      backgroundColor:
+        variant === 'primary'
+          ? colors.foreground
+          : variant === 'secondary'
+            ? colors.secondary
+            : 'transparent',
     },
     buttonText: {
       fontSize: 14,
       fontWeight: '500',
-      color: variant === 'transparent' ? '#111111' : '#ffffff',
+      color:
+        variant === 'transparent'
+          ? colors.foreground
+          : variant === 'primary'
+            ? colors.primaryForeground
+            : colors.secondaryForeground,
     },
   });

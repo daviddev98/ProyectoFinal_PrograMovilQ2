@@ -8,14 +8,13 @@ export type ChartPoint = {
   value: number;
 };
 
-export type InstallmentItem = {
+export type MovementItem = {
   id: string;
-  name: string;
-  source: string;
+  merchant: string;
+  category: string;
+  bankAccount: string;
   amount: number;
   dueDate: number;
-  currentInstallment: number;
-  totalInstallments: number;
   image: ImageSourcePropType;
 };
 
@@ -84,48 +83,44 @@ export const monthlySpendingData: Record<string, MonthSpendingData> = {
   },
 };
 
-export const installmentsMovimientos: InstallmentItem[] = [
+export const installmentsMovimientos: MovementItem[] = [
   {
     id: '1',
-    name: 'Supermercado',
-    source: 'La Colonia',
-    amount: 845.5,
+    merchant: 'La Colonia',
+    category: 'Supermercado',
+    bankAccount: 'BAC',
+    amount: -845.5,
     dueDate: 12,
-    currentInstallment: 1,
-    totalInstallments: 1,
     image: cameraImage,
   },
   {
     id: '2',
-    name: 'Transporte',
-    source: 'Uber',
-    amount: 120.0,
+    merchant: 'Uber',
+    category: 'Transporte',
+    bankAccount: 'Banpaís',
+    amount: -120.0,
     dueDate: 18,
-    currentInstallment: 1,
-    totalInstallments: 1,
     image: ps5Image,
   },
 ];
 
-export const installmentsPagos: InstallmentItem[] = [
+export const installmentsPagos: MovementItem[] = [
   {
     id: '3',
-    name: 'PS5',
-    source: 'Tienda Premier',
-    amount: 3250.0,
+    merchant: 'Tienda Premier',
+    category: 'Electrónicos',
+    bankAccount: 'Ficohsa',
+    amount: -3250.0,
     dueDate: 18,
-    currentInstallment: 1,
-    totalInstallments: 4,
     image: ps5Image,
   },
   {
     id: '4',
-    name: 'Cámara Nikon',
-    source: 'Photo Express',
-    amount: 2180.5,
+    merchant: 'Photo Express',
+    category: 'Fotografía',
+    bankAccount: 'BAC',
+    amount: -2180.5,
     dueDate: 25,
-    currentInstallment: 2,
-    totalInstallments: 4,
     image: cameraImage,
   },
 ];

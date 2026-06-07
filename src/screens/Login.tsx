@@ -5,7 +5,8 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import CustomButton from '../components/CustomButton';
 import CustomInput from '../components/CustomInput';
 import { Text } from '../components/ui';
-import { colors } from '../constants/theme';
+import { useAppSettings } from '../context/AppSettingsContext';
+import { spacing } from '../constants/theme';
 import { RootStackParamList } from '../types/navigation';
 import {
   hasValidDomain,
@@ -22,6 +23,7 @@ type FormErrors = {
 };
 
 export default function LoginScreen({ navigation }: Props) {
+  const { colors, saveEmail } = useAppSettings();
   const [usuario, setUsuario] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<FormErrors>({});
@@ -48,17 +50,18 @@ export default function LoginScreen({ navigation }: Props) {
     return Object.keys(nextErrors).length === 0;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!validateForm()) {
       return;
     }
 
+    await saveEmail(usuario.trim());
     navigation.replace('MainTabs');
   };
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: colors.background }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <View style={styles.form}>
@@ -93,12 +96,11 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.card,
   },
   form: {
     width: '100%',
     maxWidth: 320,
-    padding: 24,
+    padding: spacing.xl,
     gap: 14,
   },
   title: {

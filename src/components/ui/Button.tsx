@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Pressable, StyleSheet, ViewStyle } from 'react-native';
 
-import { colors, radius } from '../../constants/theme';
+import { useAppSettings } from '../../context/AppSettingsContext';
+import { ThemeColors } from '../../constants/themes';
+import { radius } from '../../constants/theme';
 import { cn } from '../../lib/utils';
 import { Text } from './Text';
 
@@ -17,46 +19,6 @@ type Props = {
   style?: ViewStyle;
   children?: React.ReactNode;
 };
-
-const variantStyles = StyleSheet.create({
-  default: {
-    backgroundColor: colors.foreground,
-  },
-  secondary: {
-    backgroundColor: colors.secondary,
-  },
-  outline: {
-    backgroundColor: colors.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  ghost: {
-    backgroundColor: 'transparent',
-  },
-  link: {
-    backgroundColor: 'transparent',
-  },
-});
-
-const sizeStyles = StyleSheet.create({
-  default: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: radius.sm,
-  },
-  sm: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: radius.sm,
-  },
-  icon: {
-    width: 40,
-    height: 40,
-    borderRadius: radius.full,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
 
 const textVariantMap: Record<ButtonVariant, 'default' | 'link' | 'muted'> = {
   default: 'default',
@@ -75,6 +37,8 @@ export function Button({
   style,
   children,
 }: Props) {
+  const { colors } = useAppSettings();
+  const variantStyles = useMemo(() => createVariantStyles(colors), [colors]);
   const isLightText = variant === 'default';
 
   return (
@@ -96,7 +60,7 @@ export function Button({
         (title ? (
           <Text
             variant={textVariantMap[variant]}
-            style={isLightText ? styles.lightText : undefined}
+            style={isLightText ? { color: colors.primaryForeground, fontWeight: '600' } : undefined}
           >
             {title}
           </Text>
@@ -104,6 +68,47 @@ export function Button({
     </Pressable>
   );
 }
+
+const createVariantStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    default: {
+      backgroundColor: colors.foreground,
+    },
+    secondary: {
+      backgroundColor: colors.secondary,
+    },
+    outline: {
+      backgroundColor: colors.card,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    ghost: {
+      backgroundColor: 'transparent',
+    },
+    link: {
+      backgroundColor: 'transparent',
+    },
+  });
+
+const sizeStyles = StyleSheet.create({
+  default: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: radius.sm,
+  },
+  sm: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: radius.sm,
+  },
+  icon: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});
 
 const styles = StyleSheet.create({
   base: {
@@ -115,9 +120,5 @@ const styles = StyleSheet.create({
   },
   disabled: {
     opacity: 0.5,
-  },
-  lightText: {
-    color: colors.primaryForeground,
-    fontWeight: '600',
   },
 });

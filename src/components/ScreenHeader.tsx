@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-import { colors } from '../constants/theme';
+import { useAppSettings } from '../context/AppSettingsContext';
 import { Button, Text } from './ui';
 
 type Props = {
@@ -18,6 +18,28 @@ export default function ScreenHeader({
   onBackPress,
   onSettingsPress,
 }: Props) {
+  const { colors } = useAppSettings();
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: 20,
+        },
+        title: {
+          flex: 1,
+          textAlign: 'center',
+          fontSize: 22,
+        },
+        placeholder: {
+          width: 40,
+        },
+      }),
+    []
+  );
+
   return (
     <View style={styles.container}>
       {showBack ? (
@@ -42,20 +64,3 @@ export default function ScreenHeader({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 20,
-  },
-  title: {
-    flex: 1,
-    textAlign: 'center',
-    fontSize: 22,
-  },
-  placeholder: {
-    width: 40,
-  },
-});

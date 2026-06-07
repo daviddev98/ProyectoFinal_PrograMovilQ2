@@ -1,7 +1,9 @@
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, useMemo } from 'react';
 import { Pressable, StyleSheet, View, ViewProps } from 'react-native';
 
-import { colors, radius, shadows } from '../../constants/theme';
+import { useAppSettings } from '../../context/AppSettingsContext';
+import { ThemeColors } from '../../constants/themes';
+import { radius, shadows } from '../../constants/theme';
 import { cn } from '../../lib/utils';
 import { Text } from './Text';
 
@@ -28,6 +30,9 @@ export function Tabs({ value, onValueChange, children, style }: TabsProps) {
 }
 
 export function TabsList({ style, ...props }: ViewProps) {
+  const { colors } = useAppSettings();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   return <View style={cn(styles.list, style)} {...props} />;
 }
 
@@ -38,6 +43,8 @@ type TabsTriggerProps = {
 
 export function TabsTrigger({ value, title }: TabsTriggerProps) {
   const context = useContext(TabsContext);
+  const { colors } = useAppSettings();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   if (!context) {
     throw new Error('TabsTrigger debe usarse dentro de Tabs');
@@ -62,6 +69,8 @@ export function TabsTrigger({ value, title }: TabsTriggerProps) {
 
 export function TabsContent({ value, children }: { value: string; children: React.ReactNode }) {
   const context = useContext(TabsContext);
+  const { colors } = useAppSettings();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   if (!context || context.value !== value) {
     return null;
@@ -70,35 +79,38 @@ export function TabsContent({ value, children }: { value: string; children: Reac
   return <View style={styles.content}>{children}</View>;
 }
 
-const styles = StyleSheet.create({
-  list: {
-    flexDirection: 'row',
-    backgroundColor: colors.secondary,
-    borderRadius: radius.full,
-    padding: 4,
-    gap: 4,
-  },
-  trigger: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 10,
-    borderRadius: radius.full,
-  },
-  triggerActive: {
-    backgroundColor: colors.card,
-    ...shadows.soft,
-  },
-  triggerText: {
-    color: colors.mutedForeground,
-    fontWeight: '500',
-  },
-  triggerTextActive: {
-    color: colors.foreground,
-    fontWeight: '700',
-  },
-  content: {
-    marginTop: 16,
-    gap: 12,
-  },
-});
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    list: {
+      flexDirection: 'row',
+      backgroundColor: colors.secondary,
+      borderRadius: radius.full,
+      padding: 4,
+      gap: 4,
+    },
+    trigger: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 10,
+      borderRadius: radius.full,
+    },
+    triggerActive: {
+      backgroundColor: colors.card,
+      ...shadows.soft,
+    },
+    triggerText: {
+      color: colors.mutedForeground,
+      fontWeight: '500',
+      fontSize: 12,
+    },
+    triggerTextActive: {
+      color: colors.foreground,
+      fontWeight: '700',
+      fontSize: 12,
+    },
+    content: {
+      marginTop: 16,
+      gap: 12,
+    },
+  });

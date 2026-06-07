@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -16,7 +16,9 @@ import {
   installmentsMovimientos,
   installmentsPagos,
 } from '../../constants/sampleData';
-import { colors, radius, spacing } from '../../constants/theme';
+import { radius, spacing } from '../../constants/theme';
+import { useAppSettings } from '../../context/AppSettingsContext';
+import { ThemeColors } from '../../constants/themes';
 import { RootStackParamList } from '../../types/navigation';
 import { formatLPS } from '../../utils/currency';
 import { getMonthKey } from '../../utils/date';
@@ -36,6 +38,9 @@ function getInitialMonth(): Date {
 
 export default function InicioScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { colors } = useAppSettings();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   const [activeTab, setActiveTab] = useState('movimientos');
   const [selectedMonth, setSelectedMonth] = useState(getInitialMonth);
 
@@ -46,10 +51,6 @@ export default function InicioScreen() {
   const canGoPrev = currentMonthIndex > 0;
   const canGoNext =
     currentMonthIndex !== -1 && currentMonthIndex < availableMonthKeys.length - 1;
-
-  const handlePayNow = (name: string) => {
-    Alert.alert('Pago simulado', `Procesando pago de ${name} (datos de muestra).`);
-  };
 
   const handleOpenSettings = () => {
     navigation.navigate('Configuracion');
@@ -90,7 +91,7 @@ export default function InicioScreen() {
 
         <View style={styles.statsRow}>
           <StatCard label="Ingresos" amount={monthData.ingresos} />
-          <StatCard label="Gastos" amount={monthData.gastos} highlight />
+          <StatCard label="Gastos" amount={-monthData.gastos} highlight />
           <StatCard label="Total" amount={monthData.total} />
         </View>
 
@@ -103,21 +104,13 @@ export default function InicioScreen() {
 
             <TabsContent value="movimientos">
               {installmentsMovimientos.map((item) => (
-                <InstallmentCard
-                  key={item.id}
-                  item={item}
-                  onPayNow={() => handlePayNow(item.name)}
-                />
+                <InstallmentCard key={item.id} item={item} />
               ))}
             </TabsContent>
 
             <TabsContent value="pagos-programados">
               {installmentsPagos.map((item) => (
-                <InstallmentCard
-                  key={item.id}
-                  item={item}
-                  onPayNow={() => handlePayNow(item.name)}
-                />
+                <InstallmentCard key={item.id} item={item} />
               ))}
             </TabsContent>
           </Tabs>
@@ -127,34 +120,35 @@ export default function InicioScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  scroll: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: spacing.lg,
-    paddingBottom: 120,
-  },
-  totalSpending: {
-    marginTop: 4,
-    marginBottom: 8,
-    fontSize: 34,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    gap: 10,
-    marginTop: 20,
-    marginBottom: 24,
-  },
-  installmentsPanel: {
-    backgroundColor: colors.card,
-    borderTopLeftRadius: radius.xl,
-    borderTopRightRadius: radius.xl,
-    padding: spacing.lg,
-    minHeight: 320,
-  },
-});
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    safeArea: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    scroll: {
+      flex: 1,
+    },
+    scrollContent: {
+      paddingHorizontal: spacing.lg,
+      paddingBottom: 120,
+    },
+    totalSpending: {
+      marginTop: 4,
+      marginBottom: 8,
+      fontSize: 34,
+    },
+    statsRow: {
+      flexDirection: 'row',
+      gap: 10,
+      marginTop: 20,
+      marginBottom: 24,
+    },
+    installmentsPanel: {
+      backgroundColor: colors.card,
+      borderTopLeftRadius: radius.xl,
+      borderTopRightRadius: radius.xl,
+      padding: spacing.lg,
+      minHeight: 320,
+    },
+  });

@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Svg, { Circle, Defs, Line, LinearGradient, Path, Stop } from 'react-native-svg';
 
-import { colors, radius, shadows } from '../constants/theme';
+import { useAppSettings } from '../context/AppSettingsContext';
+import { radius, shadows } from '../constants/theme';
 import { ChartPoint } from '../constants/sampleData';
 import { formatLPS } from '../utils/currency';
 import { Card, Text } from './ui';
@@ -48,6 +49,36 @@ export default function SpendingChart({
   startLabel,
   endLabel,
 }: Props) {
+  const { colors } = useAppSettings();
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        wrapper: {
+          position: 'relative',
+          marginTop: 8,
+        },
+        tooltip: {
+          position: 'absolute',
+          paddingHorizontal: 12,
+          paddingVertical: 8,
+          borderRadius: radius.md,
+          ...shadows.card,
+          gap: 2,
+        },
+        tooltipAmount: {
+          fontWeight: '700',
+          fontSize: 13,
+        },
+        labels: {
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          marginTop: 8,
+          paddingHorizontal: 4,
+        },
+      }),
+    []
+  );
+
   const { points, linePath, areaPath } = buildPath(data);
   const highlightIndex = Math.floor(data.length / 2);
   const highlightPoint = points[highlightIndex];
@@ -104,28 +135,3 @@ export default function SpendingChart({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  wrapper: {
-    position: 'relative',
-    marginTop: 8,
-  },
-  tooltip: {
-    position: 'absolute',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: radius.md,
-    ...shadows.card,
-    gap: 2,
-  },
-  tooltipAmount: {
-    fontWeight: '700',
-    fontSize: 13,
-  },
-  labels: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 8,
-    paddingHorizontal: 4,
-  },
-});

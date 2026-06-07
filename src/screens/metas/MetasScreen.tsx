@@ -3,11 +3,13 @@ import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Text } from '../../components/ui';
-import { colors } from '../../constants/theme';
+import { useAppSettings } from '../../context/AppSettingsContext';
 
 export default function MetasScreen() {
+  const { colors } = useAppSettings();
+
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.content}>
         <Text variant="title">Metas</Text>
       </View>
@@ -18,7 +20,6 @@ export default function MetasScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   content: {
     flex: 1,
