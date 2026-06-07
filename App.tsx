@@ -1,6 +1,12 @@
 import React from 'react';
-import Login from './src/screens/Login';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+
+import AppNavigator from './src/navigation/AppNavigator';
 
 export default function App() {
-  return <Login />;
+  return (
+    <SafeAreaProvider>
+      <AppNavigator />
+    </SafeAreaProvider>
+  );
 }

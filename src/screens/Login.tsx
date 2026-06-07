@@ -1,42 +1,68 @@
 import React, { useState } from 'react';
+import { KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+
+import CustomButton from '../components/CustomButton';
+import CustomInput from '../components/CustomInput';
+import { Text } from '../components/ui';
+import { colors } from '../constants/theme';
+import { RootStackParamList } from '../types/navigation';
 import {
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+  hasValidDomain,
+  isRequired,
+  isValidEmail,
+  isValidPassword,
+  isValidPhone,
+} from '../utils/validation';
 
-const DOMINIOS_VALIDOS = ['@gmail.com', '@unitec.edu', '@hotmail.com', '@outlook.com'];
+type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
 
-const Login: React.FC = () => {
+type FormErrors = {
+  usuario?: string;
+  telefono?: string;
+  password?: string;
+};
+
+export default function LoginScreen({ navigation }: Props) {
   const [usuario, setUsuario] = useState('');
+  const [telefono, setTelefono] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [errors, setErrors] = useState<FormErrors>({});
+
+  const validateForm = (): boolean => {
+    const nextErrors: FormErrors = {};
+
+    if (!isRequired(usuario)) {
+      nextErrors.usuario = 'El correo es obligatorio.';
+    } else if (!isValidEmail(usuario)) {
+      nextErrors.usuario = 'Ingresa un correo electrónico válido.';
+    } else if (!hasValidDomain(usuario)) {
+      nextErrors.usuario =
+        'El correo debe ser @gmail.com, @unitec.edu, @hotmail.com o @outlook.com.';
+    }
+
+    if (!isRequired(telefono)) {
+      nextErrors.telefono = 'El teléfono es obligatorio.';
+    } else if (!isValidPhone(telefono)) {
+      nextErrors.telefono = 'Ingresa un teléfono válido (8 a 15 dígitos).';
+    }
+
+    if (!isRequired(password)) {
+      nextErrors.password = 'La contraseña es obligatoria.';
+    } else if (!isValidPassword(password)) {
+      nextErrors.password = 'La contraseña debe tener más de 8 caracteres.';
+    }
+
+    setErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
+  };
 
   const handleSubmit = () => {
-    setError('');
-
-    if (!usuario.trim() || !password.trim()) {
-      setError('Todos los campos son obligatorios.');
+    if (!validateForm()) {
       return;
     }
 
-    const dominioValido = DOMINIOS_VALIDOS.some((d) => usuario.endsWith(d));
-    if (!dominioValido) {
-      setError('El correo debe ser @gmail.com, @unitec.edu, @hotmail.com o @outlook.com.');
-      return;
-    }
-
-    if (password.length <= 8) {
-      setError('La contraseña debe tener más de 8 caracteres.');
-      return;
-    }
-
-    Alert.alert('Éxito', 'Inicio de sesión exitoso');
+    navigation.replace('MainTabs');
   };
 
   return (
@@ -45,43 +71,46 @@ const Login: React.FC = () => {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <View style={styles.form}>
-        <Text style={styles.title}>Iniciar sesión</Text>
+        <Text variant="subtitle" style={styles.title}>
+          Iniciar sesión
+        </Text>
 
-        <TextInput
-          placeholder="Usuario"
+        <CustomInput
+          type="email"
+          placeholder="Correo electrónico"
           value={usuario}
-          onChangeText={setUsuario}
-          style={styles.input}
-          autoCapitalize="none"
-          autoComplete="email"
-          keyboardType="email-address"
+          onChange={setUsuario}
+          error={errors.usuario}
         />
 
-        <TextInput
+        <CustomInput
+          type="phone"
+          placeholder="Teléfono"
+          value={telefono}
+          onChange={setTelefono}
+          error={errors.telefono}
+        />
+
+        <CustomInput
+          type="password"
           placeholder="Contraseña"
           value={password}
-          onChangeText={setPassword}
-          style={styles.input}
-          secureTextEntry
-          autoCapitalize="none"
+          onChange={setPassword}
+          error={errors.password}
         />
 
-        {error ? <Text style={styles.error}>{error}</Text> : null}
-
-        <Pressable style={styles.button} onPress={handleSubmit}>
-          <Text style={styles.buttonText}>Entrar</Text>
-        </Pressable>
+        <CustomButton title="Entrar" onPress={handleSubmit} />
       </View>
     </KeyboardAvoidingView>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.card,
   },
   form: {
     width: '100%',
@@ -90,35 +119,7 @@ const styles = StyleSheet.create({
     gap: 14,
   },
   title: {
-    fontSize: 18,
-    fontWeight: '500',
-    color: '#111111',
     textAlign: 'center',
     marginBottom: 8,
   },
-  input: {
-    borderBottomWidth: 1,
-    borderBottomColor: '#cccccc',
-    paddingVertical: 8,
-    fontSize: 14,
-    color: '#111111',
-  },
-  error: {
-    color: '#c00000',
-    fontSize: 12,
-    marginTop: 2,
-  },
-  button: {
-    marginTop: 12,
-    padding: 10,
-    borderRadius: 4,
-    backgroundColor: '#111111',
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: '#ffffff',
-    fontSize: 14,
-  },
 });
-
-export default Login;
