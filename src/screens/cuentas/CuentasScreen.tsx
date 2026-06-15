@@ -3,7 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Text } from '../../components/ui';
-import { useAppSettings } from '../../context/AppSettingsContext';
+import { useAppSettings } from '../../hooks/useAppSettings';
 
 export default function CuentasScreen() {
   const { colors } = useAppSettings();

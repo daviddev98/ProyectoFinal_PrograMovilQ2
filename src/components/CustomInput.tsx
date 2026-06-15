@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 
-import { useAppSettings } from '../context/AppSettingsContext';
+import { useAppSettings } from '../hooks/useAppSettings';
 import { ThemeColors } from '../constants/themes';
 
 type Props = {

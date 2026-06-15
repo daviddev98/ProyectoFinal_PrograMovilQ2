@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { StyleSheet, View, ViewProps } from 'react-native';
 
-import { useAppSettings } from '../../context/AppSettingsContext';
+import { useAppSettings } from '../../hooks/useAppSettings';
 import { ThemeColors } from '../../constants/themes';
 import { radius, shadows } from '../../constants/theme';
 import { cn } from '../../lib/utils';

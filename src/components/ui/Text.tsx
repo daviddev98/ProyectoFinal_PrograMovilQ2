@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { Text as RNText, TextProps as RNTextProps, StyleSheet } from 'react-native';
 
-import { useAppSettings } from '../../context/AppSettingsContext';
+import { useAppSettings } from '../../hooks/useAppSettings';
 import { ThemeColors } from '../../constants/themes';
 import { cn } from '../../lib/utils';
 

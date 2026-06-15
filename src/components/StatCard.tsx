@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { StyleSheet } from 'react-native';
 
-import { useAppSettings } from '../context/AppSettingsContext';
+import { useAppSettings } from '../hooks/useAppSettings';
 import { ThemeColors } from '../constants/themes';
 import { formatLPS } from '../utils/currency';
 import { Card, CardContent, Text } from './ui';

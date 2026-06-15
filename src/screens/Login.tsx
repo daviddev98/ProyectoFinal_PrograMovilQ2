@@ -5,7 +5,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import CustomButton from '../components/CustomButton';
 import CustomInput from '../components/CustomInput';
 import { Text } from '../components/ui';
-import { useAppSettings } from '../context/AppSettingsContext';
+import { useAppSettings } from '../hooks/useAppSettings';
 import { spacing } from '../constants/theme';
 import { RootStackParamList } from '../types/navigation';
 import {

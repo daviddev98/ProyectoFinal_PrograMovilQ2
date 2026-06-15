@@ -9,7 +9,7 @@ import { Ionicons } from '@expo/vector-icons';
 import ScreenHeader from '../../components/ScreenHeader';
 import CustomButton from '../../components/CustomButton';
 import { Card, CardContent, Switch, Text } from '../../components/ui';
-import { useAppSettings } from '../../context/AppSettingsContext';
+import { useAppSettings } from '../../hooks/useAppSettings';
 import { ThemeColors } from '../../constants/themes';
 import { radius, spacing } from '../../constants/theme';
 import { RootStackParamList } from '../../types/navigation';

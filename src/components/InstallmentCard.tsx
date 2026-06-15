@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { Image, StyleSheet, View } from 'react-native';
 
-import { useAppSettings } from '../context/AppSettingsContext';
+import { useAppSettings } from '../hooks/useAppSettings';
 import { MovementItem } from '../constants/sampleData';
 import { ThemeColors } from '../constants/themes';
 import { radius } from '../constants/theme';

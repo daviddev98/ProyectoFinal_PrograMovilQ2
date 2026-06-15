@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-import { useAppSettings } from '../context/AppSettingsContext';
+import { useAppSettings } from '../hooks/useAppSettings';
 import { ThemeColors } from '../constants/themes';
 import { radius } from '../constants/theme';
 import { getMonthLabel, shiftMonth } from '../utils/date';
