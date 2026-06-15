@@ -18,6 +18,23 @@ export type MovementItem = {
   image: ImageSourcePropType;
 };
 
+export type GoalItem = {
+  id: string;
+  name: string;
+  store: string;
+  amount: number;
+  dueDate: number;
+  currentInstallment: number;
+  totalInstallments: number;
+  image: ImageSourcePropType;
+};
+
+export type CardWalletData = {
+  limitBalance: number;
+  backCardNumber: string;
+  backCardBrand: string;
+};
+
 export type MonthSpendingData = {
   totalSpending: number;
   ingresos: number;
@@ -121,6 +138,35 @@ export const installmentsPagos: MovementItem[] = [
     bankAccount: 'BAC',
     amount: -2180.5,
     dueDate: 25,
+    image: cameraImage,
+  },
+];
+
+export const cardWalletData: CardWalletData = {
+  limitBalance: 43093.0,
+  backCardNumber: '828749-2847-03',
+  backCardBrand: 'Master Card',
+};
+
+export const metasGoals: GoalItem[] = [
+  {
+    id: 'goal-1',
+    name: 'PS5',
+    store: 'Amazon.com',
+    amount: 836.94,
+    dueDate: 18,
+    currentInstallment: 1,
+    totalInstallments: 4,
+    image: ps5Image,
+  },
+  {
+    id: 'goal-2',
+    name: 'Cámara Nikon',
+    store: 'Photo Express',
+    amount: 2180.5,
+    dueDate: 25,
+    currentInstallment: 2,
+    totalInstallments: 6,
     image: cameraImage,
   },
 ];

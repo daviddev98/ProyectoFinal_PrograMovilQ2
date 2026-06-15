@@ -23,3 +23,7 @@ export const selectMonthSpendingData = (monthKey: string) =>
 export const selectAvailableMonthKeys = createSelector(selectFinance, (finance) =>
   Object.keys(finance.monthlySpending).sort()
 );
+
+export const selectMetas = createSelector(selectFinance, (finance) => finance.metas);
+
+export const selectCardWallet = createSelector(selectFinance, (finance) => finance.cardWallet);
