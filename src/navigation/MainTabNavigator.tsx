@@ -1,17 +1,21 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import FloatingAddButton from '../components/FloatingAddButton';
 import FloatingTabBar from '../components/FloatingTabBar';
 import CuentasScreen from '../screens/cuentas/CuentasScreen';
 import InicioScreen from '../screens/main/InicioScreen';
 import MetasScreen from '../screens/metas/MetasScreen';
-import { MainTabParamList } from '../types/navigation';
+import { MainTabParamList, RootStackParamList } from '../types/navigation';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
 export default function MainTabNavigator() {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+
   return (
     <View style={styles.container}>
       <Tab.Navigator
@@ -26,7 +30,7 @@ export default function MainTabNavigator() {
         <Tab.Screen name="Cuentas" component={CuentasScreen} />
       </Tab.Navigator>
 
-      <FloatingAddButton />
+      <FloatingAddButton onPress={() => navigation.navigate('RegistroMovimiento')} />
     </View>
   );
 }

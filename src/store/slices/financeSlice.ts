@@ -1,4 +1,4 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 import {
   CardWalletData,
@@ -31,7 +31,12 @@ const initialState: FinanceState = {
 const financeSlice = createSlice({
   name: 'finance',
   initialState,
-  reducers: {},
+  reducers: {
+    addMovimiento: (state, action: PayloadAction<MovementItem>) => {
+      state.movimientos.unshift(action.payload);
+    },
+  },
 });
 
+export const { addMovimiento } = financeSlice.actions;
 export default financeSlice.reducer;

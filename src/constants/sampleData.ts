@@ -3,6 +3,29 @@ import { ImageSourcePropType } from 'react-native';
 import ps5Image from '../../assets/images/ps5.png';
 import cameraImage from '../../assets/images/camera.png';
 
+export type TransactionType = 'gasto' | 'ingreso';
+
+export const BANK_ACCOUNTS = ['BAC', 'Banpaís', 'Ficohsa', 'Atlántida', 'Otro'] as const;
+
+export const EXPENSE_CATEGORIES = [
+  'Supermercado',
+  'Transporte',
+  'Electrónicos',
+  'Fotografía',
+  'Servicios',
+  'Salud',
+  'Entretenimiento',
+  'Otros',
+] as const;
+
+export const INCOME_CATEGORIES = [
+  'Salario',
+  'Freelance',
+  'Inversiones',
+  'Regalo',
+  'Otros',
+] as const;
+
 export type ChartPoint = {
   label: string;
   value: number;

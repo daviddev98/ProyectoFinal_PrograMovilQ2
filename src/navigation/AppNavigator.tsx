@@ -4,6 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import ConfiguracionScreen from '../screens/configuracion/ConfiguracionScreen';
 import LoginScreen from '../screens/Login';
+import RegistrarMovimientoScreen from '../screens/registro/RegistrarMovimientoScreen';
 import { RootStackParamList } from '../types/navigation';
 import MainTabNavigator from './MainTabNavigator';
 
@@ -22,6 +23,7 @@ export default function AppNavigator() {
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="MainTabs" component={MainTabNavigator} />
         <Stack.Screen name="Configuracion" component={ConfiguracionScreen} />
+        <Stack.Screen name="RegistroMovimiento" component={RegistrarMovimientoScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

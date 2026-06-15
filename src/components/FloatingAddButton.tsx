@@ -1,26 +1,20 @@
 import React from 'react';
-import { Alert, Pressable, StyleSheet } from 'react-native';
+import { Pressable, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-import { colors, radius, shadows } from '../constants/theme';
+import { radius, shadows } from '../constants/theme';
+
+const BUTTON_COLOR = '#38BDF8';
+const ICON_COLOR = '#000000';
 
 type Props = {
   onPress?: () => void;
 };
 
 export default function FloatingAddButton({ onPress }: Props) {
-  const handlePress = () => {
-    if (onPress) {
-      onPress();
-      return;
-    }
-
-    Alert.alert('Nuevo registro', 'Función de agregar movimiento (datos de muestra).');
-  };
-
   return (
-    <Pressable style={styles.button} onPress={handlePress}>
-      <Ionicons name="add" size={28} color={colors.primaryForeground} />
+    <Pressable style={styles.button} onPress={onPress}>
+      <Ionicons name="add" size={28} color={ICON_COLOR} />
     </Pressable>
   );
 }
@@ -33,7 +27,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: radius.full,
-    backgroundColor: colors.foreground,
+    backgroundColor: BUTTON_COLOR,
     alignItems: 'center',
     justifyContent: 'center',
     ...shadows.card,
