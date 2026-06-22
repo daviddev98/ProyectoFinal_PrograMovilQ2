@@ -3,6 +3,8 @@ export type RootStackParamList = {
   MainTabs: undefined;
   Configuracion: undefined;
   RegistroMovimiento: undefined;
+  CuentasDetalle: { accountId: string };
+  NuevaCuenta: undefined;
 };
 
 export type MainTabParamList = {

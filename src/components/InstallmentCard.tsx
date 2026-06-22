@@ -1,11 +1,13 @@
 import React, { useMemo } from 'react';
-import { Image, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
+import CategoryIcon from './CategoryIcon';
 import { useAppSettings } from '../hooks/useAppSettings';
 import { MovementItem } from '../constants/sampleData';
 import { ThemeColors } from '../constants/themes';
 import { radius } from '../constants/theme';
 import { formatLPS } from '../utils/currency';
+import { getCategoryBaseName } from '../utils/categoryIcons';
 import { Card, CardContent, Text } from './ui';
 
 type Props = {
@@ -21,14 +23,14 @@ export default function InstallmentCard({ item }: Props) {
     <Card style={styles.card}>
       <CardContent>
         <View style={styles.topRow}>
-          <Image source={item.image} style={styles.image} resizeMode="cover" />
+          <CategoryIcon category={item.category} />
 
           <View style={styles.info}>
             <Text variant="default" style={styles.merchant}>
               {item.merchant}
             </Text>
             <Text variant="muted" style={styles.category}>
-              {item.category}
+              {getCategoryBaseName(item.category)}
             </Text>
           </View>
 
@@ -71,12 +73,6 @@ const createStyles = (colors: ThemeColors) =>
       flexDirection: 'row',
       alignItems: 'center',
       gap: 12,
-    },
-    image: {
-      width: 48,
-      height: 48,
-      borderRadius: radius.sm,
-      backgroundColor: colors.secondary,
     },
     info: {
       flex: 1,
