@@ -52,11 +52,36 @@ export type GoalItem = {
   image: ImageSourcePropType;
 };
 
+export type CardBrand = 'mastercard' | 'visa' | 'amex';
+
 export type CardWalletData = {
-  limitBalance: number;
-  backCardNumber: string;
-  backCardBrand: string;
+  brand: CardBrand;
+  usedBalance: number;
 };
+
+export type AccountType = 'bank' | 'credit_card' | 'cash';
+
+export type Account = {
+  id: string;
+  name: string;
+  subtitle: string;
+  type: AccountType;
+  balance: number;
+  color: string;
+  brand?: CardBrand;
+};
+
+export const ACCOUNT_TYPES: { value: AccountType; label: string }[] = [
+  { value: 'bank', label: 'Cuenta bancaria' },
+  { value: 'credit_card', label: 'Tarjeta de crédito' },
+  { value: 'cash', label: 'Efectivo' },
+];
+
+export const CARD_BRANDS: { value: CardBrand; label: string }[] = [
+  { value: 'mastercard', label: 'Mastercard' },
+  { value: 'visa', label: 'Visa' },
+  { value: 'amex', label: 'Amex' },
+];
 
 export type MonthSpendingData = {
   totalSpending: number;
@@ -166,10 +191,54 @@ export const installmentsPagos: MovementItem[] = [
 ];
 
 export const cardWalletData: CardWalletData = {
-  limitBalance: 43093.0,
-  backCardNumber: '828749-2847-03',
-  backCardBrand: 'Master Card',
+  brand: 'mastercard',
+  usedBalance: 3017.44,
 };
+
+export const sampleAccounts: Account[] = [
+  {
+    id: 'acc-banpais',
+    name: 'Banpais',
+    subtitle: 'Cuenta planilla',
+    type: 'bank',
+    balance: 13198.72,
+    color: '#F59E0B',
+  },
+  {
+    id: 'acc-bac',
+    name: 'BAC',
+    subtitle: 'Cuenta personal',
+    type: 'bank',
+    balance: 3723.41,
+    color: '#EF4444',
+  },
+  {
+    id: 'acc-efectivo',
+    name: 'Efectivo',
+    subtitle: 'Master Card',
+    type: 'credit_card',
+    balance: 2058.12,
+    color: '#22C55E',
+    brand: 'mastercard',
+  },
+  {
+    id: 'acc-bac-hon',
+    name: 'BAC HON',
+    subtitle: 'Tarjeta crédito',
+    type: 'credit_card',
+    balance: 1102.0,
+    color: '#3B82F6',
+    brand: 'mastercard',
+  },
+  {
+    id: 'acc-ficohsa',
+    name: 'Ficohsa',
+    subtitle: 'Cuenta ahorro',
+    type: 'bank',
+    balance: 83.0,
+    color: '#E5E7EB',
+  },
+];
 
 export const metasGoals: GoalItem[] = [
   {

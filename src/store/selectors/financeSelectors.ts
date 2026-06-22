@@ -27,3 +27,19 @@ export const selectAvailableMonthKeys = createSelector(selectFinance, (finance) 
 export const selectMetas = createSelector(selectFinance, (finance) => finance.metas);
 
 export const selectCardWallet = createSelector(selectFinance, (finance) => finance.cardWallet);
+
+export const selectAccounts = createSelector(selectFinance, (finance) => finance.accounts);
+
+export const selectAccountById = (accountId: string) =>
+  createSelector(selectAccounts, (accounts) =>
+    accounts.find((account) => account.id === accountId)
+  );
+
+export const selectAccountsNetBalance = createSelector(selectAccounts, (accounts) =>
+  accounts.reduce((total, account) => {
+    if (account.type === 'credit_card') {
+      return total - account.balance;
+    }
+    return total + account.balance;
+  }, 0)
+);

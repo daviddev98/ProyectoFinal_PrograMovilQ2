@@ -1,19 +1,24 @@
 import React, { useMemo } from 'react';
-import { Alert, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import CardWallet from '../../components/CardWallet';
-import GoalCard from '../../components/GoalCard';
-import QuickActionButtons from '../../components/QuickActionButtons';
+import AccountListItem from '../../components/AccountListItem';
+import AccountsDonutChart from '../../components/AccountsDonutChart';
 import ScreenHeader from '../../components/ScreenHeader';
-import { Text } from '../../components/ui';
+import { Button, Text } from '../../components/ui';
+import { Account } from '../../constants/sampleData';
 import { spacing } from '../../constants/theme';
 import { useAppSettings } from '../../hooks/useAppSettings';
 import { ThemeColors } from '../../constants/themes';
 import { useAppSelector } from '../../store/hooks';
-import { selectCardWallet, selectMetas } from '../../store/selectors/financeSelectors';
+import {
+  selectAccounts,
+  selectAccountsNetBalance,
+} from '../../store/selectors/financeSelectors';
+import { formatLPS } from '../../utils/currency';
 import { RootStackParamList } from '../../types/navigation';
 
 export default function CuentasScreen() {
@@ -21,36 +26,19 @@ export default function CuentasScreen() {
   const { colors } = useAppSettings();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
-  const cardWallet = useAppSelector(selectCardWallet);
-  const metas = useAppSelector(selectMetas);
+  const accounts = useAppSelector(selectAccounts);
+  const totalBalance = useAppSelector(selectAccountsNetBalance);
 
   const handleOpenSettings = () => {
     navigation.navigate('Configuracion');
   };
 
-  const quickActions = [
-    {
-      id: 'details',
-      label: 'Detalles',
-      icon: 'card-outline' as const,
-      onPress: () => Alert.alert('Detalles', 'Próximamente podrás ver los detalles de tu tarjeta.'),
-    },
-    {
-      id: 'freeze',
-      label: 'Congelar',
-      icon: 'snow-outline' as const,
-      onPress: () => Alert.alert('Congelar tarjeta', 'Tu tarjeta se congelará temporalmente.'),
-    },
-    {
-      id: 'more',
-      label: 'Más',
-      icon: 'ellipsis-horizontal' as const,
-      onPress: handleOpenSettings,
-    },
-  ];
+  const handleAccountPress = (account: Account) => {
+    navigation.navigate('CuentasDetalle', { accountId: account.id });
+  };
 
-  const handlePayPress = (goalName: string) => {
-    Alert.alert('Pagar ahora', `Procesar pago de ${goalName}.`);
+  const handleCreateAccount = () => {
+    navigation.navigate('NuevaCuenta');
   };
 
   return (
@@ -66,23 +54,42 @@ export default function CuentasScreen() {
           onSettingsPress={handleOpenSettings}
         />
 
-        <CardWallet wallet={cardWallet} />
+        <AccountsDonutChart accounts={accounts} totalBalance={totalBalance} />
 
-        <QuickActionButtons actions={quickActions} />
+        <View style={styles.sectionHeader}>
+          <View style={styles.sectionTitleRow}>
+            <Ionicons name="menu-outline" size={20} color={colors.foreground} />
+            <Text variant="subtitle" style={styles.sectionTitle}>
+              Mis cuentas
+            </Text>
+          </View>
 
-        <Text variant="subtitle" style={styles.sectionTitle}>
-          Movimientos
-        </Text>
+          <Button variant="outline" size="icon" onPress={handleCreateAccount}>
+            <Ionicons name="add" size={20} color={colors.foreground} />
+          </Button>
+        </View>
 
-        <View style={styles.goalsList}>
-          {metas.map((item) => (
-            <GoalCard
-              key={item.id}
-              item={item}
-              onPayPress={(goal) => handlePayPress(goal.name)}
+        <View style={styles.totalRow}>
+          <Ionicons name="wallet-outline" size={16} color={colors.mutedForeground} />
+          <Text style={styles.totalLabel}>{formatLPS(totalBalance)}</Text>
+        </View>
+
+        <View style={styles.accountsList}>
+          {accounts.map((account) => (
+            <AccountListItem
+              key={account.id}
+              account={account}
+              onPress={handleAccountPress}
             />
           ))}
         </View>
+
+        <Pressable style={styles.createButton} onPress={handleCreateAccount}>
+          <Ionicons name="add-circle-outline" size={20} color={colors.primary} />
+          <Text variant="link" style={styles.createButtonText}>
+            Crear nueva cuenta
+          </Text>
+        </Pressable>
       </ScrollView>
     </SafeAreaView>
   );
@@ -101,12 +108,47 @@ const createStyles = (colors: ThemeColors) =>
       paddingHorizontal: spacing.lg,
       paddingBottom: 120,
     },
+    sectionHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: spacing.sm,
+    },
+    sectionTitleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
     sectionTitle: {
-      marginBottom: spacing.md,
       fontSize: 20,
     },
-    goalsList: {
+    totalRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      marginBottom: spacing.md,
+    },
+    totalLabel: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.foreground,
+    },
+    accountsList: {
       gap: 0,
     },
+    createButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: spacing.sm,
+      marginTop: spacing.md,
+      paddingVertical: spacing.md,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderStyle: 'dashed',
+    },
+    createButtonText: {
+      fontWeight: '600',
+    },
   });
-
