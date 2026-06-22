@@ -3,6 +3,7 @@ export type RootStackParamList = {
   MainTabs: undefined;
   Configuracion: undefined;
   RegistroMovimiento: undefined;
+  Register: undefined;
 };
 
 export type MainTabParamList = {

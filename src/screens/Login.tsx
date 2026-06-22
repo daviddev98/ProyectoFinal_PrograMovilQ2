@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, StyleSheet, View, Alert } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import CustomButton from '../components/CustomButton';
@@ -14,6 +14,7 @@ import {
   isValidEmail,
   isValidPassword,
 } from '../utils/validation';
+import { supabase } from '../services/supabaseClient';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
 
@@ -55,8 +56,30 @@ export default function LoginScreen({ navigation }: Props) {
       return;
     }
 
-    await saveEmail(usuario.trim());
-    navigation.replace('MainTabs');
+    try {
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: usuario.trim(),
+        password: password.trim(),
+      });
+
+      
+      if (error) {
+        Alert.alert(
+          'Error de inicio de sesión', 
+          'El correo o la contraseña son incorrectos, o la cuenta aún no ha sido registrada.'
+        );
+        return;
+      }
+      
+      if (data.user) {
+        await saveEmail(usuario.trim());
+        navigation.replace('MainTabs'); 
+      }
+
+    } catch (err) {
+      Alert.alert('Error', 'Ocurrió un problema inesperado al conectar con el servidor.');
+    }
   };
 
   return (
@@ -86,6 +109,16 @@ export default function LoginScreen({ navigation }: Props) {
         />
 
         <CustomButton title="Entrar" onPress={handleSubmit} />
+        <Text 
+          style={{ textAlign: 'center', 
+            marginTop: 12, 
+            fontSize: 14, 
+            textDecorationLine: 'underline', 
+            color: colors.foreground }} 
+          onPress={() => navigation.navigate('Register')}
+        >
+          ¿No tienes cuenta? Regístrate aquí
+        </Text>
       </View>
     </KeyboardAvoidingView>
   );

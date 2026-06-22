@@ -25,3 +25,5 @@ yarn-error.log*
 # expo
 .expo/
 .expo-test-build/
+
+.env

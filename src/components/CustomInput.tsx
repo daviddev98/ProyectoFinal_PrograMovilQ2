@@ -13,7 +13,7 @@ import { useAppSettings } from '../hooks/useAppSettings';
 import { ThemeColors } from '../constants/themes';
 
 type Props = {
-  type?: 'text' | 'email' | 'password';
+  type?: 'text' | 'email' | 'password' | 'default' | 'number';
   placeholder: string;
   value: string;
   onChange: (text: string) => void;
