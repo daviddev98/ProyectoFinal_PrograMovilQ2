@@ -26,7 +26,6 @@ export default function AppNavigator() {
         <Stack.Screen name="Login" component={LoginScreen} />
 
         <Stack.Screen name="Register" component={RegisterScreen} />
-
         <Stack.Screen name="MainTabs" component={MainTabNavigator} />
         <Stack.Screen name="Configuracion" component={ConfiguracionScreen} />
         <Stack.Screen name="RegistroMovimiento" component={RegistrarMovimientoScreen} />
