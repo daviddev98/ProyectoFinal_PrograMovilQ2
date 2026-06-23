@@ -26,6 +26,14 @@ export const selectAvailableMonthKeys = createSelector(selectFinance, (finance) 
 
 export const selectMetas = createSelector(selectFinance, (finance) => finance.metas);
 
+export const selectSavingsMetas = createSelector(
+  selectFinance,
+  (finance) => finance.savingsMetas
+);
+
+export const selectSavingsMetaById = (metaId: string) =>
+  createSelector(selectSavingsMetas, (metas) => metas.find((meta) => meta.id === metaId));
+
 export const selectCardWallet = createSelector(selectFinance, (finance) => finance.cardWallet);
 
 export const selectAccounts = createSelector(selectFinance, (finance) => finance.accounts);

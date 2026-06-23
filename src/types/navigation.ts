@@ -6,6 +6,7 @@ export type RootStackParamList = {
   Register: undefined;
   CuentasDetalle: { accountId: string };
   NuevaCuenta: undefined;
+  MetaForm: { metaId?: string } | undefined;
 };
 
 export type MainTabParamList = {

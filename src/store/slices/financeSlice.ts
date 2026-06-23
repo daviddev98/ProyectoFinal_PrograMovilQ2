@@ -6,12 +6,14 @@ import {
   GoalItem,
   MovementItem,
   MonthSpendingData,
+  SavingsMeta,
   cardWalletData,
   installmentsMovimientos,
   installmentsPagos,
   metasGoals,
   monthlySpendingData,
   sampleAccounts,
+  sampleSavingsMetas,
 } from '../../constants/sampleData';
 
 export type FinanceState = {
@@ -19,6 +21,7 @@ export type FinanceState = {
   movimientos: MovementItem[];
   pagosProgramados: MovementItem[];
   metas: GoalItem[];
+  savingsMetas: SavingsMeta[];
   cardWallet: CardWalletData;
   accounts: Account[];
 };
@@ -28,6 +31,7 @@ const initialState: FinanceState = {
   movimientos: installmentsMovimientos,
   pagosProgramados: installmentsPagos,
   metas: metasGoals,
+  savingsMetas: sampleSavingsMetas,
   cardWallet: cardWalletData,
   accounts: sampleAccounts,
 };
@@ -42,8 +46,18 @@ const financeSlice = createSlice({
     addAccount: (state, action: PayloadAction<Account>) => {
       state.accounts.push(action.payload);
     },
+    addSavingsMeta: (state, action: PayloadAction<SavingsMeta>) => {
+      state.savingsMetas.unshift(action.payload);
+    },
+    updateSavingsMeta: (state, action: PayloadAction<SavingsMeta>) => {
+      const index = state.savingsMetas.findIndex((meta) => meta.id === action.payload.id);
+      if (index !== -1) {
+        state.savingsMetas[index] = action.payload;
+      }
+    },
   },
 });
 
-export const { addMovimiento, addAccount } = financeSlice.actions;
+export const { addMovimiento, addAccount, addSavingsMeta, updateSavingsMeta } =
+  financeSlice.actions;
 export default financeSlice.reducer;

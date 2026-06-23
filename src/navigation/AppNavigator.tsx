@@ -6,6 +6,7 @@ import ConfiguracionScreen from '../screens/configuracion/ConfiguracionScreen';
 import CuentasDetalleScreen from '../screens/cuentas/CuentasDetalleScreen';
 import NuevaCuentaScreen from '../screens/cuentas/NuevaCuentaScreen';
 import LoginScreen from '../screens/Login';
+import MetaFormScreen from '../screens/metas/MetaFormScreen';
 import RegisterScreen from '../screens/registro/RegisterScreenCuenta';
 import RegistrarMovimientoScreen from '../screens/registro/RegistrarMovimientoScreen';
 import { RootStackParamList } from '../types/navigation';
@@ -31,6 +32,7 @@ export default function AppNavigator() {
         <Stack.Screen name="RegistroMovimiento" component={RegistrarMovimientoScreen} />
         <Stack.Screen name="CuentasDetalle" component={CuentasDetalleScreen} />
         <Stack.Screen name="NuevaCuenta" component={NuevaCuentaScreen} />
+        <Stack.Screen name="MetaForm" component={MetaFormScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

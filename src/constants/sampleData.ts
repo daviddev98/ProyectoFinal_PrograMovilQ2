@@ -240,6 +240,117 @@ export const sampleAccounts: Account[] = [
   },
 ];
 
+export const META_CATEGORIES = [
+  'Ahorro',
+  'Viaje',
+  'Vivienda',
+  'Educación',
+  'Salud',
+  'Tecnología',
+  'Emergencia',
+  'Otros',
+] as const;
+
+export type MetaCategory = (typeof META_CATEGORIES)[number];
+
+export const META_PRIORITIES = [
+  { value: 'alta', label: 'Alta' },
+  { value: 'media', label: 'Media' },
+  { value: 'baja', label: 'Baja' },
+] as const;
+
+export type MetaPriority = (typeof META_PRIORITIES)[number]['value'];
+
+export const META_STATUSES = [
+  { value: 'activa', label: 'Activa' },
+  { value: 'completada', label: 'Completada' },
+  { value: 'pausada', label: 'Pausada' },
+] as const;
+
+export type MetaStatus = (typeof META_STATUSES)[number]['value'];
+
+export type SavingsMeta = {
+  id: string;
+  nombre: string;
+  descripcion: string;
+  categoria: MetaCategory;
+  montoObjetivo: number;
+  montoActual: number;
+  fechaInicio: string;
+  fechaLimite: string;
+  prioridad: MetaPriority;
+  estado: MetaStatus;
+  notas: string;
+};
+
+export const sampleSavingsMetas: SavingsMeta[] = [
+  {
+    id: 'meta-1',
+    nombre: 'Fondo de emergencia',
+    descripcion: 'Ahorrar el equivalente a 3 meses de gastos para imprevistos.',
+    categoria: 'Emergencia',
+    montoObjetivo: 50000,
+    montoActual: 32500,
+    fechaInicio: '01/01/2026',
+    fechaLimite: '31/12/2026',
+    prioridad: 'alta',
+    estado: 'activa',
+    notas: 'Transferir L 2,500 cada quincena desde la cuenta planilla.',
+  },
+  {
+    id: 'meta-2',
+    nombre: 'Viaje a Roatán',
+    descripcion: 'Vacaciones familiares en la isla durante Semana Santa.',
+    categoria: 'Viaje',
+    montoObjetivo: 18000,
+    montoActual: 7200,
+    fechaInicio: '15/02/2026',
+    fechaLimite: '10/04/2026',
+    prioridad: 'media',
+    estado: 'activa',
+    notas: 'Incluye vuelos, hotel y actividades acuáticas.',
+  },
+  {
+    id: 'meta-3',
+    nombre: 'Laptop para trabajo',
+    descripcion: 'Equipo nuevo para proyectos freelance y clases.',
+    categoria: 'Tecnología',
+    montoObjetivo: 35000,
+    montoActual: 35000,
+    fechaInicio: '01/03/2026',
+    fechaLimite: '30/06/2026',
+    prioridad: 'alta',
+    estado: 'completada',
+    notas: 'Modelo con 16 GB RAM y SSD de 512 GB.',
+  },
+  {
+    id: 'meta-4',
+    nombre: 'Enganche apartamento',
+    descripcion: 'Ahorro inicial para compra de vivienda propia.',
+    categoria: 'Vivienda',
+    montoObjetivo: 120000,
+    montoActual: 28500,
+    fechaInicio: '01/01/2025',
+    fechaLimite: '31/12/2027',
+    prioridad: 'alta',
+    estado: 'activa',
+    notas: 'Meta a largo plazo. Revisar avance cada trimestre.',
+  },
+  {
+    id: 'meta-5',
+    nombre: 'Curso de inglés',
+    descripcion: 'Certificación internacional para mejorar oportunidades laborales.',
+    categoria: 'Educación',
+    montoObjetivo: 8500,
+    montoActual: 2100,
+    fechaInicio: '01/06/2026',
+    fechaLimite: '15/09/2026',
+    prioridad: 'media',
+    estado: 'pausada',
+    notas: 'Pausada hasta definir horario en el nuevo empleo.',
+  },
+];
+
 export const metasGoals: GoalItem[] = [
   {
     id: 'goal-1',
