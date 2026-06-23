@@ -2,6 +2,7 @@
   "expo": {
     "name": "Control de Gastos",
     "slug": "control-de-gastos",
+    "scheme": "controldegastos",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
@@ -25,7 +26,8 @@
         {
           "photosPermission": "La app necesita acceso a tus fotos para configurar tu perfil."
         }
-      ]
+      ],
+      "expo-web-browser"
     ]
   }
 }

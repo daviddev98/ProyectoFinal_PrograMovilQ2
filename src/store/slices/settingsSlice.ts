@@ -55,10 +55,22 @@ export const saveProfileImage = createAsyncThunk(
   }
 );
 
+export const clearUserStorage = createAsyncThunk('settings/clearUserStorage', async () => {
+  await Promise.all([
+    setStoredEmail(''),
+    setStoredProfileImage(''),
+  ]);
+});
+
 const settingsSlice = createSlice({
   name: 'settings',
   initialState,
-  reducers: {},
+  reducers: {
+    logoutSettings: (state) => {
+      state.email = '';
+      state.profileImageUri = null;
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(loadSettings.fulfilled, (state, action) => {
@@ -79,7 +91,9 @@ const settingsSlice = createSlice({
       .addCase(saveProfileImage.fulfilled, (state, action) => {
         state.profileImageUri = action.payload;
       });
+     
   },
 });
+export const { logoutSettings } = settingsSlice.actions;
 
 export default settingsSlice.reducer;

@@ -13,11 +13,15 @@ import { useAppSettings } from '../../hooks/useAppSettings';
 import { ThemeColors } from '../../constants/themes';
 import { radius, spacing } from '../../constants/theme';
 import { RootStackParamList } from '../../types/navigation';
+import { supabase } from '../../services/supabaseClient';
+import { clearUserStorage, logoutSettings } from '../../store/slices/settingsSlice';
+import { useAppDispatch } from '../../store/hooks';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Configuracion'>;
 
 export default function ConfiguracionScreen({ navigation }: Props) {
   const rootNavigation = useNavigation();
+  const dispatch = useAppDispatch();
   const { colors, isDark, theme, setTheme, email, profileImageUri, saveProfileImage } =
     useAppSettings();
   const styles = useMemo(() => createStyles(colors), [colors]);
@@ -28,13 +32,24 @@ export default function ConfiguracionScreen({ navigation }: Props) {
       {
         text: 'Cerrar sesión',
         style: 'destructive',
-        onPress: () => {
-          rootNavigation.dispatch(
-            CommonActions.reset({
-              index: 0,
-              routes: [{ name: 'Login' }],
-            })
-          );
+        onPress: async () => { 
+          try {
+            await supabase.auth.signOut(); 
+            
+            dispatch(logoutSettings()); 
+            dispatch(clearUserStorage());
+            
+            setTimeout(() => {
+              rootNavigation.dispatch(
+                CommonActions.reset({
+                  index: 0,
+                  routes: [{ name: 'Login' }],
+                })
+              );
+            }, 100);
+          } catch (error) {
+            Alert.alert('Error', 'No se pudo cerrar la sesión correctamente.');
+          }
         },
       },
     ]);

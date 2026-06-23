@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { KeyboardAvoidingView, Platform, StyleSheet, View, Alert } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-
+import * as WebBrowser from 'expo-web-browser';
 import CustomButton from '../components/CustomButton';
 import CustomInput from '../components/CustomInput';
 import { Text } from '../components/ui';
@@ -16,6 +16,8 @@ import {
 } from '../utils/validation';
 import { supabase } from '../services/supabaseClient';
 
+WebBrowser.maybeCompleteAuthSession();
+
 type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
 
 type FormErrors = {
@@ -24,11 +26,11 @@ type FormErrors = {
 };
 
 export default function LoginScreen({ navigation }: Props) {
-  const { colors, saveEmail } = useAppSettings();
+  const { colors, saveEmail, saveProfileImage } = useAppSettings();
   const [usuario, setUsuario] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<FormErrors>({});
-
+  const [loadingGoogle, setLoadingGoogle] = useState(false);
   const validateForm = (): boolean => {
     const nextErrors: FormErrors = {};
 
@@ -74,11 +76,76 @@ export default function LoginScreen({ navigation }: Props) {
       
       if (data.user) {
         await saveEmail(usuario.trim());
+        await saveProfileImage('');
         navigation.replace('MainTabs'); 
       }
 
     } catch (err) {
       Alert.alert('Error', 'Ocurrió un problema inesperado al conectar con el servidor.');
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    try {
+      setLoadingGoogle(true); 
+      
+      const redirectUrl = 'controldegastos://auth/v1/callback';
+
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: redirectUrl,
+          skipBrowserRedirect: true,
+        },
+      });
+
+      if (error) {
+        Alert.alert('Error de autenticación', error.message);
+        return;
+      }
+
+      if (data?.url) {
+        
+        const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
+        
+        
+        if (result.type === 'success' && result.url) {
+          
+         
+          const extractToken = (url: string, key: string) => {
+            const matches = url.match(new RegExp(`${key}=([^&]*)`));
+            return matches ? matches[1] : null;
+          };
+
+          const hashToken = extractToken(result.url, 'access_token');
+          const hashRefresh = extractToken(result.url, 'refresh_token');
+
+          if (hashToken && hashRefresh) {
+           
+            await supabase.auth.setSession({
+              access_token: hashToken,
+              refresh_token: hashRefresh,
+            });
+
+           
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user?.email) {
+              await saveEmail(user.email);
+            }
+
+            console.log('¡Inicio de sesión con Google exitoso!');
+            await saveProfileImage('');
+            navigation.replace('MainTabs');
+         
+          } else {
+            Alert.alert('Error', 'No se pudieron recuperar los tokens de inicio de sesión de la URL.');
+          }
+        }
+      }
+    } catch (err) {
+      Alert.alert('Error', 'Ocurrió un error inesperado al conectar con Google.');
+    } finally {
+      setLoadingGoogle(false); 
     }
   };
 
@@ -108,7 +175,15 @@ export default function LoginScreen({ navigation }: Props) {
           error={errors.password}
         />
 
-        <CustomButton title="Entrar" onPress={handleSubmit} />
+        <View style={styles.buttonGap}>
+          <CustomButton title="Entrar" onPress={handleSubmit} />
+          
+          <CustomButton 
+            title={loadingGoogle ? 'Cargando Google...' : 'Iniciar sesión con Google'} 
+            onPress={handleGoogleLogin}
+          />
+        </View>
+
         <Text 
           style={{ textAlign: 'center', 
             marginTop: 12, 
@@ -139,5 +214,9 @@ const styles = StyleSheet.create({
   title: {
     textAlign: 'center',
     marginBottom: 8,
+  },
+  buttonGap: {
+    gap: 10,
+    marginTop: 6,
   },
 });
