@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
+import { addMovimientoThunk } from '../../store/slices/financeSlice';
 import CustomButton from '../../components/CustomButton';
 import ScreenHeader from '../../components/ScreenHeader';
 import { Tabs, TabsList, TabsTrigger, Text } from '../../components/ui';
@@ -25,7 +25,6 @@ import { radius, spacing } from '../../constants/theme';
 import { useAppSettings } from '../../hooks/useAppSettings';
 import { ThemeColors } from '../../constants/themes';
 import { useAppDispatch } from '../../store/hooks';
-import { addMovimiento } from '../../store/slices/financeSlice';
 import { RootStackParamList } from '../../types/navigation';
 import {
   isRequired,
@@ -33,8 +32,6 @@ import {
   isValidDate,
   isValidDueDay,
 } from '../../utils/validation';
-
-import cameraImage from '../../../assets/images/camera.png';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'RegistroMovimiento'>;
 
@@ -48,6 +45,14 @@ function formatToday(): string {
   const month = String(today.getMonth() + 1).padStart(2, '0');
   const year = today.getFullYear();
   return `${day}/${month}/${year}`;
+}
+
+function parseDDMMYYYYtoYYYYMMDD(dateStr: string): string {
+  const parts = dateStr.split('/');
+  if (parts.length === 3) {
+    return `${parts[2]}-${parts[1]}-${parts[0]}`;
+  }
+  return dateStr;
 }
 
 type FormFieldProps = {
@@ -203,32 +208,30 @@ export default function RegistrarMovimientoScreen({ navigation }: Props) {
     return Object.keys(nextErrors).length === 0;
   };
 
-  const handleSubmit = () => {
-    if (!validateForm()) {
-      return;
-    }
+  const handleSubmit = async () => {
+    if (!validateForm()) return;
 
     const parsedAmount = Number.parseFloat(amount.replace(',', '.'));
     const signedAmount = transactionType === 'gasto' ? -parsedAmount : parsedAmount;
     const dueDay = dueDate.trim() ? Number.parseInt(dueDate, 10) : new Date().getDate();
+    const formattedDbDate = parseDDMMYYYYtoYYYYMMDD(date);
 
-    dispatch(
-      addMovimiento({
-        id: `mov-${Date.now()}`,
+    try {
+      await dispatch(addMovimientoThunk({
         merchant: merchant.trim(),
         category: notes.trim() ? `${category} · ${notes.trim()}` : category,
         bankAccount,
         amount: signedAmount,
         dueDate: dueDay,
-        image: cameraImage,
-      })
-    );
+        date: formattedDbDate,
+      })).unwrap();
 
-    Alert.alert(
-      'Registro guardado',
-      `${transactionType === 'gasto' ? 'Gasto' : 'Ingreso'} registrado correctamente.`,
-      [{ text: 'OK', onPress: () => navigation.goBack() }]
-    );
+      Alert.alert('Registro guardado', 'El movimiento fue procesado con éxito.', [
+        { text: 'OK', onPress: () => navigation.goBack() },
+      ]);
+    } catch (error) {
+      Alert.alert('Error', 'No se pudo registrar la transacción.');
+    }
   };
 
   return (

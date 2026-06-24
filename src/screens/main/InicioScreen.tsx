@@ -3,7 +3,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
+import { fetchMovimientosByMonthThunk } from '../../store/slices/financeSlice';
 import InstallmentCard from '../../components/InstallmentCard';
 import MonthSelector from '../../components/MonthSelector';
 import ScreenHeader from '../../components/ScreenHeader';
@@ -61,6 +61,10 @@ export default function InicioScreen() {
   const handleOpenSettings = () => {
     navigation.navigate('Configuracion');
   };
+
+  React.useEffect(() => {
+    dispatch(fetchMovimientosByMonthThunk(selectedMonthKey));
+  }, [selectedMonthKey, dispatch]);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>

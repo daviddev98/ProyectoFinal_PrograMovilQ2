@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
+import { createNewAccountThunk } from '../../store/slices/financeSlice';
 import CustomButton from '../../components/CustomButton';
 import ScreenHeader from '../../components/ScreenHeader';
 import { Text } from '../../components/ui';
@@ -167,30 +167,29 @@ export default function NuevaCuentaScreen({ navigation }: Props) {
     return Object.keys(nextErrors).length === 0;
   };
 
-  const handleSubmit = () => {
-    if (!validateForm()) {
-      return;
-    }
+  const handleSubmit = async () => {
+  if (!validateForm()) return;
 
-    const parsedBalance = Number.parseFloat(balance.replace(',', '.'));
-    const colorIndex = Math.floor(Math.random() * CHART_COLORS.length);
+  const parsedBalance = Number.parseFloat(balance.replace(',', '.'));
+  const colorIndex = Math.floor(Math.random() * CHART_COLORS.length);
 
-    dispatch(
-      addAccount({
-        id: `acc-${Date.now()}`,
-        name: name.trim(),
-        subtitle: subtitle.trim(),
-        type: accountType,
-        balance: parsedBalance,
-        color: CHART_COLORS[colorIndex],
-        ...(accountType === 'credit_card' ? { brand } : {}),
-      })
-    );
+  try {
+  await dispatch(createNewAccountThunk({
+    name: name.trim(),
+    subtitle: subtitle.trim(),
+    type: accountType as 'cash' | 'savings' | 'credit_card', 
+    balance: parsedBalance,
+    color: CHART_COLORS[colorIndex],
+    ...(accountType === 'credit_card' ? { brand } : {}),
+  })).unwrap();
 
-    Alert.alert('Cuenta creada', 'La cuenta se agregó correctamente.', [
-      { text: 'OK', onPress: () => navigation.goBack() },
-    ]);
-  };
+  Alert.alert('Cuenta creada', 'La cuenta se guardó en la base de datos.', [
+    { text: 'OK', onPress: () => navigation.goBack() },
+  ]);
+} catch (error) {
+  Alert.alert('Error', 'No se pudo guardar la cuenta de ahorros.');
+}
+};
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>

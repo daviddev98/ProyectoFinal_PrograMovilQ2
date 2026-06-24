@@ -29,7 +29,7 @@ import { useAppSettings } from '../../hooks/useAppSettings';
 import { ThemeColors } from '../../constants/themes';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { selectSavingsMetaById } from '../../store/selectors/financeSelectors';
-import { addSavingsMeta, updateSavingsMeta } from '../../store/slices/financeSlice';
+import { addSavingsMetaThunk, updateSavingsMetaThunk } from '../../store/slices/financeSlice';
 import { RootStackParamList } from '../../types/navigation';
 import { getMetaProgress } from '../../utils/metas';
 import { isRequired, isValidAmount, isValidDate } from '../../utils/validation';
@@ -51,6 +51,14 @@ type FormErrors = Partial<
     string
   >
 >;
+
+function parseDDMMYYYYtoYYYYMMDD(dateStr: string): string {
+  const parts = dateStr.split('/');
+  if (parts.length === 3) {
+    return `${parts[2]}-${parts[1]}-${parts[0]}`;
+  }
+  return dateStr;
+}
 
 type FormFieldProps = {
   label: string;
@@ -174,7 +182,7 @@ export default function MetaFormScreen({ navigation, route }: Props) {
   const [fechaLimite, setFechaLimite] = useState(existingMeta?.fechaLimite ?? '');
   const [prioridad, setPrioridad] = useState<MetaPriority>(existingMeta?.prioridad ?? 'media');
   const [estado, setEstado] = useState<MetaStatus>(existingMeta?.estado ?? 'activa');
-  const [notas, setNotas] = useState(existingMeta?.notas ?? '');
+  const [notes, setNotes] = useState(existingMeta?.notas ?? '');
   const [errors, setErrors] = useState<FormErrors>({});
 
   const categoryOptions = META_CATEGORIES.map((value) => ({ value, label: value }));
@@ -225,38 +233,35 @@ export default function MetaFormScreen({ navigation, route }: Props) {
   };
 
   const buildMeta = (): SavingsMeta => ({
-    id: existingMeta?.id ?? `meta-${Date.now()}`,
+    id: existingMeta?.id ?? '',
     nombre: nombre.trim(),
     descripcion: descripcion.trim(),
     categoria,
     montoObjetivo: Number.parseFloat(montoObjetivo.replace(',', '.')),
     montoActual: Number.parseFloat(montoActual.replace(',', '.')),
-    fechaInicio: fechaInicio.trim(),
-    fechaLimite: fechaLimite.trim(),
+    fechaInicio: parseDDMMYYYYtoYYYYMMDD(fechaInicio.trim()),
+    fechaLimite: parseDDMMYYYYtoYYYYMMDD(fechaLimite.trim()),
     prioridad,
     estado,
-    notas: notas.trim(),
+    notas: notes.trim(),
   });
 
-  const handleSubmit = () => {
-    if (!validateForm()) {
-      return;
-    }
-
+  const handleSubmit = async () => {
+    if (!validateForm()) return;
     const meta = buildMeta();
 
-    if (isEditing) {
-      dispatch(updateSavingsMeta(meta));
-      Alert.alert('Meta actualizada', 'Los cambios se guardaron correctamente.', [
-        { text: 'OK', onPress: () => navigation.goBack() },
-      ]);
-      return;
+    try {
+      if (isEditing) {
+        await dispatch(updateSavingsMetaThunk(meta)).unwrap();
+        Alert.alert('Meta actualizada', 'Los cambios se guardaron en la nube.');
+      } else {
+        await dispatch(addSavingsMetaThunk(meta)).unwrap();
+        Alert.alert('Meta creada', 'Tu nueva meta se registró con éxito.');
+      }
+      navigation.goBack();
+    } catch (error) {
+      Alert.alert('Error', 'Hubo un problema al procesar la meta.');
     }
-
-    dispatch(addSavingsMeta(meta));
-    Alert.alert('Meta creada', 'Tu nueva meta se agregó correctamente.', [
-      { text: 'OK', onPress: () => navigation.goBack() },
-    ]);
   };
 
   if (isEditing && !existingMeta) {
@@ -411,8 +416,8 @@ export default function MetaFormScreen({ navigation, route }: Props) {
 
             <FormField
               label="Notas"
-              value={notas}
-              onChange={setNotas}
+              value={notes}
+              onChange={setNotes}
               placeholder="Recordatorios, plan de ahorro, etc."
               multiline
               colors={colors}
