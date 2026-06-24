@@ -1,25 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { KeyboardAvoidingView, Platform, StyleSheet, View, Alert } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import * as WebBrowser from 'expo-web-browser';
 import CustomButton from '../../components/CustomButton';
 import CustomInput from '../../components/CustomInput';
 import { Text } from '../../components/ui';
-import { useAppDispatch } from '../../store/hooks';
-import { useAppSettings } from '../../hooks/useAppSettings';
+import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 import { spacing } from '../../constants/theme';
 import { RootStackParamList } from '../../types/navigation';
-import { supabase } from '../../services/supabaseClient';
 import {
   hasValidDomain,
   isRequired,
   isValidEmail,
   isValidPassword,
 } from '../../utils/validation';
-import { logoutSettings } from '../../store/slices/settingsSlice';
-import { store } from '../../store';
-
-WebBrowser.maybeCompleteAuthSession();
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Register'>;
 
@@ -31,28 +25,14 @@ type FormErrors = {
 };
 
 export default function RegisterScreen({ navigation }: Props) {
-  const dispatch = useAppDispatch();
-  const { colors, saveEmail, saveProfileImage } = useAppSettings();
+  const { colors } = useTheme();
+  const { signUp, signInWithGoogle } = useAuth();
   const [name, setName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<FormErrors>({});
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
-        if (session.user.email) {
-          await saveEmail(session.user.email);
-        }
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
 
   const validateForm = (): boolean => {
     const nextErrors: FormErrors = {};
@@ -89,98 +69,44 @@ export default function RegisterScreen({ navigation }: Props) {
 
     setLoading(true);
 
-    try {
-      const { data, error } = await supabase.auth.signUp({
-        email: email.trim(),
-        password: password.trim(),
-        options: {
-          data: {
-            full_name: name.trim(),
-            phone_number: phoneNumber.trim(),
-          },
-        },
-      });
+    const { error } = await signUp(email, password, {
+      fullName: name,
+      phoneNumber,
+    });
 
-      if (error) {
-        Alert.alert('Error al registrarse', error.message);
-        return;
-      }
+    setLoading(false);
 
-      if (data.user) {
-        Alert.alert(
-          '¡Registro exitoso!',
-          'Tu cuenta fue creada correctamente. Revisa tu correo si se requiere confirmación.',
-          [
-            {
-              text: 'Ir a Iniciar sesión',
-              onPress: () => navigation.navigate('Login'),
-            },
-          ]
-        );
-      }
-    } catch (err) {
-      Alert.alert('Error', 'Ocurrió un problema inesperado.');
-    } finally {
-      setLoading(false);
+    if (error) {
+      Alert.alert('Error al registrarse', error);
+      return;
     }
+
+    Alert.alert(
+      '¡Registro exitoso!',
+      'Tu cuenta fue creada correctamente. Revisa tu correo si se requiere confirmación.',
+      [
+        {
+          text: 'Ir a Iniciar sesión',
+          onPress: () => navigation.navigate('Login'),
+        },
+      ]
+    );
   };
 
   const handleGoogleSignUp = async () => {
-    try {
-      setLoading(true);
-      
-      const redirectUrl = 'controldegastos://auth/v1/callback';
+    setLoading(true);
 
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: redirectUrl,
-          skipBrowserRedirect: true,
-        },
-      });
+    const { error, success } = await signInWithGoogle();
 
-      if (error) throw error;
+    setLoading(false);
 
-      if (data?.url) {
-        const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
-        
-        if (result.type === 'success' && result.url) {
-          
-          const extractToken = (url: string, key: string) => {
-            const matches = url.match(new RegExp(`${key}=([^&]*)`));
-            return matches ? matches[1] : null;
-          };
+    if (error) {
+      Alert.alert('Error con Google', error);
+      return;
+    }
 
-          const hashToken = extractToken(result.url, 'access_token');
-          const hashRefresh = extractToken(result.url, 'refresh_token');
-
-          if (hashToken && hashRefresh) {
-            await supabase.auth.setSession({
-              access_token: hashToken,
-              refresh_token: hashRefresh,
-            });
-
-    
-            await saveProfileImage(''); 
-
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user?.email) {
-              await saveEmail(user.email);
-            }
-
-            console.log('¡Registro con Google exitoso!');
-            
-            navigation.replace('MainTabs');
-            return;
-          } else {
-            Alert.alert('Error', 'No se pudieron recuperar los tokens de registro de la URL.');
-          }
-        }
-      }
-    } catch (err: any) {
-      Alert.alert('Error con Google', err.message || 'No se pudo registrar con Google.');
-    } finally {
-      setLoading(false);
+    if (success) {
+      navigation.replace('MainTabs');
     }
   };
 
@@ -227,20 +153,16 @@ export default function RegisterScreen({ navigation }: Props) {
         />
 
         <View style={styles.buttonGap}>
-          <CustomButton 
-            title={loading ? 'Registrando...' : 'Registrarse'} 
-            onPress={handleRegister} 
+          <CustomButton
+            title={loading ? 'Registrando...' : 'Registrarse'}
+            onPress={handleRegister}
           />
-          
-          <CustomButton 
-            title="Registrarse con Google" 
-            onPress={handleGoogleSignUp}
-            // variant="secondary" <- Si tu CustomButton acepta variantes, actívalo
-          />
+
+          <CustomButton title="Registrarse con Google" onPress={handleGoogleSignUp} />
         </View>
 
-        <Text 
-          style={[styles.linkText, { color: colors.foreground }]} 
+        <Text
+          style={[styles.linkText, { color: colors.foreground }]}
           onPress={() => navigation.navigate('Login')}
         >
           ¿Ya tienes cuenta? Inicia sesión aquí

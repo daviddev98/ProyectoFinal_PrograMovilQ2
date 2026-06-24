@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { KeyboardAvoidingView, Platform, StyleSheet, View, Alert } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import * as WebBrowser from 'expo-web-browser';
 import CustomButton from '../components/CustomButton';
 import CustomInput from '../components/CustomInput';
 import { Text } from '../components/ui';
-import { useAppSettings } from '../hooks/useAppSettings';
+import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { spacing } from '../constants/theme';
 import { RootStackParamList } from '../types/navigation';
 import {
@@ -14,9 +14,6 @@ import {
   isValidEmail,
   isValidPassword,
 } from '../utils/validation';
-import { supabase } from '../services/supabaseClient';
-
-WebBrowser.maybeCompleteAuthSession();
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
 
@@ -26,11 +23,13 @@ type FormErrors = {
 };
 
 export default function LoginScreen({ navigation }: Props) {
-  const { colors, saveEmail, saveProfileImage } = useAppSettings();
+  const { colors } = useTheme();
+  const { signInWithPassword, signInWithGoogle } = useAuth();
   const [usuario, setUsuario] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<FormErrors>({});
   const [loadingGoogle, setLoadingGoogle] = useState(false);
+
   const validateForm = (): boolean => {
     const nextErrors: FormErrors = {};
 
@@ -58,94 +57,33 @@ export default function LoginScreen({ navigation }: Props) {
       return;
     }
 
-    try {
+    const { error } = await signInWithPassword(usuario, password);
 
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: usuario.trim(),
-        password: password.trim(),
-      });
-
-      
-      if (error) {
-        Alert.alert(
-          'Error de inicio de sesión', 
-          'El correo o la contraseña son incorrectos, o la cuenta aún no ha sido registrada.'
-        );
-        return;
-      }
-      
-      if (data.user) {
-        await saveEmail(usuario.trim());
-        await saveProfileImage('');
-        navigation.replace('MainTabs'); 
-      }
-
-    } catch (err) {
-      Alert.alert('Error', 'Ocurrió un problema inesperado al conectar con el servidor.');
+    if (error) {
+      Alert.alert(
+        'Error de inicio de sesión',
+        'El correo o la contraseña son incorrectos, o la cuenta aún no ha sido registrada.'
+      );
+      return;
     }
+
+    navigation.replace('MainTabs');
   };
 
   const handleGoogleLogin = async () => {
-    try {
-      setLoadingGoogle(true); 
-      
-      const redirectUrl = 'controldegastos://auth/v1/callback';
+    setLoadingGoogle(true);
 
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: redirectUrl,
-          skipBrowserRedirect: true,
-        },
-      });
+    const { error, success } = await signInWithGoogle();
 
-      if (error) {
-        Alert.alert('Error de autenticación', error.message);
-        return;
-      }
+    setLoadingGoogle(false);
 
-      if (data?.url) {
-        
-        const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
-        
-        
-        if (result.type === 'success' && result.url) {
-          
-         
-          const extractToken = (url: string, key: string) => {
-            const matches = url.match(new RegExp(`${key}=([^&]*)`));
-            return matches ? matches[1] : null;
-          };
+    if (error) {
+      Alert.alert('Error de autenticación', error);
+      return;
+    }
 
-          const hashToken = extractToken(result.url, 'access_token');
-          const hashRefresh = extractToken(result.url, 'refresh_token');
-
-          if (hashToken && hashRefresh) {
-           
-            await supabase.auth.setSession({
-              access_token: hashToken,
-              refresh_token: hashRefresh,
-            });
-
-           
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user?.email) {
-              await saveEmail(user.email);
-            }
-
-            console.log('¡Inicio de sesión con Google exitoso!');
-            await saveProfileImage('');
-            navigation.replace('MainTabs');
-         
-          } else {
-            Alert.alert('Error', 'No se pudieron recuperar los tokens de inicio de sesión de la URL.');
-          }
-        }
-      }
-    } catch (err) {
-      Alert.alert('Error', 'Ocurrió un error inesperado al conectar con Google.');
-    } finally {
-      setLoadingGoogle(false); 
+    if (success) {
+      navigation.replace('MainTabs');
     }
   };
 
@@ -177,19 +115,21 @@ export default function LoginScreen({ navigation }: Props) {
 
         <View style={styles.buttonGap}>
           <CustomButton title="Entrar" onPress={handleSubmit} />
-          
-          <CustomButton 
-            title={loadingGoogle ? 'Cargando Google...' : 'Iniciar sesión con Google'} 
+
+          <CustomButton
+            title={loadingGoogle ? 'Cargando Google...' : 'Iniciar sesión con Google'}
             onPress={handleGoogleLogin}
           />
         </View>
 
-        <Text 
-          style={{ textAlign: 'center', 
-            marginTop: 12, 
-            fontSize: 14, 
-            textDecorationLine: 'underline', 
-            color: colors.foreground }} 
+        <Text
+          style={{
+            textAlign: 'center',
+            marginTop: 12,
+            fontSize: 14,
+            textDecorationLine: 'underline',
+            color: colors.foreground,
+          }}
           onPress={() => navigation.navigate('Register')}
         >
           ¿No tienes cuenta? Regístrate aquí

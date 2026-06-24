@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect } from 'react';
+import React, { useMemo } from 'react';
 import { Alert, Image, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { CommonActions, useNavigation } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -10,38 +10,20 @@ import { decode } from 'base64-arraybuffer';
 import ScreenHeader from '../../components/ScreenHeader';
 import CustomButton from '../../components/CustomButton';
 import { Card, CardContent, Switch, Text } from '../../components/ui';
-import { useAppSettings } from '../../hooks/useAppSettings';
+import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 import { ThemeColors } from '../../constants/themes';
 import { radius, spacing } from '../../constants/theme';
 import { RootStackParamList } from '../../types/navigation';
 import { supabase } from '../../services/supabaseClient';
-import { clearUserStorage, logoutSettings } from '../../store/slices/settingsSlice';
-import { useAppDispatch } from '../../store/hooks';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Configuracion'>;
 
 export default function ConfiguracionScreen({ navigation }: Props) {
   const rootNavigation = useNavigation();
-  const dispatch = useAppDispatch();
-  const { colors, isDark, theme, setTheme, email, profileImageUri, saveProfileImage } =
-    useAppSettings();
+  const { colors, isDark, theme, setTheme } = useTheme();
+  const { user, profileImageUri, saveProfileImage, signOut } = useAuth();
   const styles = useMemo(() => createStyles(colors), [colors]);
-  const [userEmail, setUserEmail] = React.useState(email || '');
-
-  useEffect(() => {
-    const checkUser = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user && user.email) {
-          setUserEmail(user.email);
-        }
-      } catch (error) {
-        console.error("Error al obtener el usuario:", error);
-      }
-    };
-  
-    checkUser();
-  }, []);
 
   const handleLogout = () => {
     Alert.alert('Cerrar sesión', '¿Estás seguro de que deseas cerrar sesión?', [
@@ -49,24 +31,20 @@ export default function ConfiguracionScreen({ navigation }: Props) {
       {
         text: 'Cerrar sesión',
         style: 'destructive',
-        onPress: async () => { 
-          try {
-            await supabase.auth.signOut(); 
-            
-            dispatch(logoutSettings()); 
-            dispatch(clearUserStorage());
-            
-            setTimeout(() => {
-              rootNavigation.dispatch(
-                CommonActions.reset({
-                  index: 0,
-                  routes: [{ name: 'Login' }],
-                })
-              );
-            }, 100);
-          } catch (error) {
+        onPress: async () => {
+          const { error } = await signOut();
+
+          if (error) {
             Alert.alert('Error', 'No se pudo cerrar la sesión correctamente.');
+            return;
           }
+
+          rootNavigation.dispatch(
+            CommonActions.reset({
+              index: 0,
+              routes: [{ name: 'Login' }],
+            })
+          );
         },
       },
     ]);
@@ -91,47 +69,42 @@ export default function ConfiguracionScreen({ navigation }: Props) {
       const imageUri = result.assets[0].uri;
 
       try {
-        const userRes = await supabase.auth.getUser();
-        const user = userRes.data.user;
         if (!user) throw new Error('Usuario no encontrado');
 
         const fileExt = imageUri.split('.').pop()?.toLowerCase() || 'jpg';
         const mimeType = fileExt === 'png' ? 'image/png' : 'image/jpeg';
         const filePath = `${user.id}/avatar.${fileExt}`;
-        
+
         const base64Data = await FileSystem.readAsStringAsync(imageUri, {
-         encoding: 'base64',
+          encoding: 'base64',
         });
-        
+
         const arrayBuffer = decode(base64Data);
 
         const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, arrayBuffer, { 
-         upsert: true,
-         contentType: mimeType,
-        });
+          .from('avatars')
+          .upload(filePath, arrayBuffer, {
+            upsert: true,
+            contentType: mimeType,
+          });
 
         if (uploadError) throw uploadError;
 
-        // 4. Obtener la URL pública oficial
-        const { data: { publicUrl } } = supabase.storage
-          .from('avatars')
-          .getPublicUrl(filePath);
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from('avatars').getPublicUrl(filePath);
 
-        // Romper la caché visual agregando el parámetro de tiempo
         const freshUrl = `${publicUrl}?t=${new Date().getTime()}`;
 
         await saveProfileImage(freshUrl);
         Alert.alert('Éxito', 'Foto de perfil actualizada en la nube.');
+      } catch (error) {
+        console.error('Error crítico en subida Base64:', error);
 
-      } catch (error: any) {
-        console.error("Error crítico en subida Base64:", error);
-        
         try {
           await saveProfileImage(imageUri);
           Alert.alert('Aviso', 'La foto se guardó localmente en el dispositivo.');
-        } catch (localError) {
+        } catch {
           Alert.alert('Error', 'No se pudo actualizar la imagen de perfil.');
         }
       }
@@ -158,7 +131,7 @@ export default function ConfiguracionScreen({ navigation }: Props) {
           </Pressable>
 
           <Text variant="default" style={styles.email}>
-            {userEmail || 'Sin correo registrado'}
+            {user?.email || 'Sin correo registrado'}
           </Text>
         </View>
 

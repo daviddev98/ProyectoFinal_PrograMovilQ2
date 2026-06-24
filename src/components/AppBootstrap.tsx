@@ -1,23 +1,18 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
-import { useAppSettings } from '../hooks/useAppSettings';
-import { useAppDispatch } from '../store/hooks';
-import { loadSettings } from '../store/slices/settingsSlice';
+import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 
 type Props = {
   children: React.ReactNode;
 };
 
 export default function AppBootstrap({ children }: Props) {
-  const dispatch = useAppDispatch();
-  const { isReady, colors } = useAppSettings();
+  const { isLoading: authLoading } = useAuth();
+  const { isReady: themeReady, colors } = useTheme();
 
-  useEffect(() => {
-    dispatch(loadSettings());
-  }, [dispatch]);
-
-  if (!isReady) {
+  if (authLoading || !themeReady) {
     return (
       <View style={[styles.loading, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color={colors.primary} />

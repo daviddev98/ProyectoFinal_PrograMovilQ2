@@ -2,6 +2,7 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
+import { useAuth } from '../context/AuthContext';
 import ConfiguracionScreen from '../screens/configuracion/ConfiguracionScreen';
 import CuentasDetalleScreen from '../screens/cuentas/CuentasDetalleScreen';
 import NuevaCuentaScreen from '../screens/cuentas/NuevaCuentaScreen';
@@ -15,10 +16,12 @@ import MainTabNavigator from './MainTabNavigator';
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function AppNavigator() {
+  const { isAuthenticated } = useAuth();
+
   return (
     <NavigationContainer>
       <Stack.Navigator
-        initialRouteName="Login"
+        initialRouteName={isAuthenticated ? 'MainTabs' : 'Login'}
         screenOptions={{
           headerShown: false,
           animation: 'slide_from_right',
