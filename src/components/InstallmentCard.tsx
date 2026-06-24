@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import CategoryIcon from './CategoryIcon';
 import { useAppSettings } from '../hooks/useAppSettings';
@@ -12,14 +12,15 @@ import { Card, CardContent, Text } from './ui';
 
 type Props = {
   item: MovementItem;
+  onPress?: () => void;
 };
 
-export default function InstallmentCard({ item }: Props) {
+export default function InstallmentCard({ item, onPress }: Props) {
   const { colors } = useAppSettings();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const isExpense = item.amount < 0;
 
-  return (
+  const content = (
     <Card style={styles.card}>
       <CardContent>
         <View style={styles.topRow}>
@@ -56,18 +57,25 @@ export default function InstallmentCard({ item }: Props) {
             {item.bankAccount}
           </Text>
           <Text variant="link" style={styles.detailsLink}>
-            Ver detalles
+            {onPress ? 'Editar' : 'Ver detalles'}
           </Text>
         </View>
       </CardContent>
     </Card>
   );
+
+  if (!onPress) {
+    return content;
+  }
+
+  return <Pressable onPress={onPress}>{content}</Pressable>;
 }
 
 const createStyles = (colors: ThemeColors) =>
   StyleSheet.create({
     card: {
       borderRadius: radius.lg,
+      marginBottom: 12,
     },
     topRow: {
       flexDirection: 'row',

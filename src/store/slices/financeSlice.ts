@@ -1,30 +1,71 @@
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 import { supabase } from '../../services/supabaseClient';
+import { getMonthDateRange, getMonthKeyFromDateString } from '../../utils/date';
+import { mapMovementFromDb } from '../../utils/movimientos';
 
 import {
   Account,
   CardWalletData,
   GoalItem,
   MovementItem,
-  MonthSpendingData,
   SavingsMeta,
   cardWalletData,
-  installmentsMovimientos,
-  installmentsPagos,
   metasGoals,
-  monthlySpendingData,
-  sampleAccounts,
-  sampleSavingsMetas,
 } from '../../constants/sampleData';
 
 interface CreateAccountPayload {
   name: string;
   subtitle: string;
-  type: 'cash' | 'savings' | 'credit_card';
+  type: Account['type'];
   balance: number;
   color: string;
   brand?: string;
 }
+
+function mapAccountTypeToDb(type: Account['type']): string {
+  if (type === 'bank') {
+    return 'savings';
+  }
+  return type;
+}
+
+function mapAccountFromDb(row: Record<string, unknown>): Account {
+  const rawType = String(row.type ?? 'bank');
+  const type: Account['type'] =
+    rawType === 'savings' ? 'bank' : (rawType as Account['type']);
+
+  return {
+    id: String(row.id),
+    name: String(row.name),
+    subtitle: String(row.subtitle),
+    type,
+    balance: Number(row.balance),
+    color: String(row.color),
+    ...(row.brand ? { brand: row.brand as Account['brand'] } : {}),
+  };
+}
+
+export const fetchAccountsThunk = createAsyncThunk(
+  'finance/fetchAccounts',
+  async (_, { rejectWithValue }) => {
+    try {
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError || !userData.user) throw new Error('Usuario no autenticado.');
+
+      const { data, error } = await supabase
+        .from('cuentas')
+        .select('*')
+        .eq('user_id', userData.user.id)
+        .order('name', { ascending: true });
+
+      if (error) throw error;
+
+      return (data ?? []).map((row) => mapAccountFromDb(row));
+    } catch (error: any) {
+      return rejectWithValue(error.message || 'Error al consultar las cuentas.');
+    }
+  }
+);
 
 interface CreateMovementPayload {
   merchant: string;
@@ -32,7 +73,11 @@ interface CreateMovementPayload {
   bankAccount: string;
   amount: number;
   dueDate: number;
-  date: string; 
+  date: string;
+}
+
+interface UpdateMovementPayload extends CreateMovementPayload {
+  id: string;
 }
 
 export const createNewAccountThunk = createAsyncThunk(
@@ -49,7 +94,7 @@ export const createNewAccountThunk = createAsyncThunk(
             user_id: userData.user.id,
             name: accountData.name,
             subtitle: accountData.subtitle,
-            type: accountData.type,
+            type: mapAccountTypeToDb(accountData.type),
             balance: accountData.balance,
             color: accountData.color,
             brand: accountData.brand || null,
@@ -59,7 +104,7 @@ export const createNewAccountThunk = createAsyncThunk(
         .single();
 
       if (error) throw error;
-      return data as Account;
+      return mapAccountFromDb(data);
     } catch (error: any) {
       return rejectWithValue(error.message || 'Error al crear la cuenta.');
     }
@@ -91,16 +136,78 @@ export const addMovimientoThunk = createAsyncThunk(
 
       if (error) throw error;
 
-      return {
-        id: data.id,
-        merchant: data.merchant,
-        category: data.category,
-        bankAccount: data.bank_account,
-        amount: data.amount,
-        dueDate: data.due_date,
-      } as MovementItem;
+      return mapMovementFromDb(data);
     } catch (error: any) {
       return rejectWithValue(error.message || 'Error al guardar el movimiento.');
+    }
+  }
+);
+
+export const updateMovimientoThunk = createAsyncThunk(
+  'finance/updateMovimiento',
+  async (movementData: UpdateMovementPayload, { rejectWithValue }) => {
+    try {
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError || !userData.user) throw new Error('Usuario no autenticado.');
+
+      const { data, error } = await supabase
+        .from('movimientos')
+        .update({
+          merchant: movementData.merchant,
+          category: movementData.category,
+          bank_account: movementData.bankAccount,
+          amount: movementData.amount,
+          due_date: movementData.dueDate,
+          date: movementData.date,
+        })
+        .eq('id', movementData.id)
+        .eq('user_id', userData.user.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return mapMovementFromDb(data);
+    } catch (error: any) {
+      return rejectWithValue(error.message || 'Error al actualizar el movimiento.');
+    }
+  }
+);
+
+function mapSavingsMetaFromDb(row: Record<string, unknown>): SavingsMeta {
+  return {
+    id: String(row.id),
+    nombre: String(row.nombre),
+    descripcion: String(row.descripcion ?? ''),
+    categoria: row.categoria as SavingsMeta['categoria'],
+    montoObjetivo: Number(row.monto_objetivo),
+    montoActual: Number(row.monto_actual),
+    fechaInicio: String(row.fecha_inicio),
+    fechaLimite: String(row.fecha_limite),
+    prioridad: row.prioridad as SavingsMeta['prioridad'],
+    estado: row.estado as SavingsMeta['estado'],
+    notas: String(row.notas ?? ''),
+  };
+}
+
+export const fetchSavingsMetasThunk = createAsyncThunk(
+  'finance/fetchSavingsMetas',
+  async (_, { rejectWithValue }) => {
+    try {
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError || !userData.user) throw new Error('Usuario no autenticado.');
+
+      const { data, error } = await supabase
+        .from('ahorros_metas')
+        .select('*')
+        .eq('user_id', userData.user.id)
+        .order('fecha_limite', { ascending: true });
+
+      if (error) throw error;
+
+      return (data ?? []).map((row) => mapSavingsMetaFromDb(row));
+    } catch (error: any) {
+      return rejectWithValue(error.message || 'Error al consultar las metas.');
     }
   }
 );
@@ -134,19 +241,7 @@ export const addSavingsMetaThunk = createAsyncThunk(
 
       if (error) throw error;
 
-      return {
-        id: data.id,
-        nombre: data.nombre,
-        descripcion: data.descripcion,
-        categoria: data.categoria,
-        montoObjetivo: data.monto_objetivo,
-        montoActual: data.monto_actual,
-        fechaInicio: data.fecha_inicio,
-        fechaLimite: data.fecha_limite,
-        prioridad: data.prioridad,
-        estado: data.estado,
-        notas: data.notas,
-      } as SavingsMeta;
+      return mapSavingsMetaFromDb(data);
     } catch (error: any) {
       return rejectWithValue(error.message || 'Error al crear la meta.');
     }
@@ -177,19 +272,7 @@ export const updateSavingsMetaThunk = createAsyncThunk(
 
       if (error) throw error;
 
-      return {
-        id: data.id,
-        nombre: data.nombre,
-        descripcion: data.descripcion,
-        categoria: data.categoria,
-        montoObjetivo: data.monto_objetivo,
-        montoActual: data.monto_actual,
-        fechaInicio: data.fecha_inicio,
-        fechaLimite: data.fecha_limite,
-        prioridad: data.prioridad,
-        estado: data.estado,
-        notas: data.notas,
-      } as SavingsMeta;
+      return mapSavingsMetaFromDb(data);
     } catch (error: any) {
       return rejectWithValue(error.message || 'Error al actualizar la meta.');
     }
@@ -200,60 +283,117 @@ export const fetchMovimientosByMonthThunk = createAsyncThunk(
   'finance/fetchMovimientosByMonth',
   async (monthKey: string, { rejectWithValue }) => {
     try {
-  
-      const startDate = `${monthKey}-01`;
-      const endDate = `${monthKey}-31`;
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError || !userData.user) throw new Error('Usuario no autenticado.');
+
+      const { startDate, endDate } = getMonthDateRange(monthKey);
 
       const { data, error } = await supabase
         .from('movimientos')
         .select('*')
+        .eq('user_id', userData.user.id)
         .gte('date', startDate)
-        .lte('date', endDate);
+        .lte('date', endDate)
+        .order('date', { ascending: false });
 
       if (error) throw error;
 
-      return data.map((item: any) => ({
-        id: item.id,
-        merchant: item.merchant,
-        category: item.category,
-        bankAccount: item.bank_account,
-        amount: item.amount,
-        dueDate: item.due_date,
-      })) as MovementItem[];
+      const movimientos = (data ?? []).map((item) => mapMovementFromDb(item));
+
+      return { monthKey, movimientos };
     } catch (error: any) {
       return rejectWithValue(error.message || 'Error al consultar movimientos del mes.');
     }
   }
 );
 
+export const fetchMovimientosByAccountThunk = createAsyncThunk(
+  'finance/fetchMovimientosByAccount',
+  async (
+    { accountId, accountName }: { accountId: string; accountName: string },
+    { rejectWithValue }
+  ) => {
+    try {
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError || !userData.user) throw new Error('Usuario no autenticado.');
+
+      const { data, error } = await supabase
+        .from('movimientos')
+        .select('*')
+        .eq('user_id', userData.user.id)
+        .eq('bank_account', accountName)
+        .order('date', { ascending: false });
+
+      if (error) throw error;
+
+      const movimientos = (data ?? []).map((item) => mapMovementFromDb(item));
+
+      return { accountId, movimientos };
+    } catch (error: any) {
+      return rejectWithValue(error.message || 'Error al consultar movimientos de la cuenta.');
+    }
+  }
+);
+
 
 export type FinanceState = {
-  monthlySpending: Record<string, MonthSpendingData>;
-  movimientos: MovementItem[];
-  pagosProgramados: MovementItem[];
+  movimientosByMonth: Record<string, MovementItem[]>;
+  movimientosByAccount: Record<string, MovementItem[]>;
+  movimientosFetchRequestIdByMonth: Record<string, string>;
   metas: GoalItem[];
   savingsMetas: SavingsMeta[];
   cardWallet: CardWalletData;
   accounts: Account[];
 };
 
+function removeMovementFromCaches(state: FinanceState, movimientoId: string) {
+  for (const key of Object.keys(state.movimientosByMonth)) {
+    state.movimientosByMonth[key] = state.movimientosByMonth[key].filter(
+      (movement) => movement.id !== movimientoId
+    );
+  }
+
+  for (const key of Object.keys(state.movimientosByAccount)) {
+    state.movimientosByAccount[key] = state.movimientosByAccount[key].filter(
+      (movement) => movement.id !== movimientoId
+    );
+  }
+}
+
+function addMovementToCaches(state: FinanceState, movement: MovementItem) {
+  const monthKey = movement.date ? getMonthKeyFromDateString(movement.date) : '2026-06';
+  const monthItems = state.movimientosByMonth[monthKey] ?? [];
+  state.movimientosByMonth[monthKey] = [
+    movement,
+    ...monthItems.filter((item) => item.id !== movement.id),
+  ];
+
+  const account = state.accounts.find((item) => item.name === movement.bankAccount);
+  if (account) {
+    const accountItems = state.movimientosByAccount[account.id] ?? [];
+    state.movimientosByAccount[account.id] = [
+      movement,
+      ...accountItems.filter((item) => item.id !== movement.id),
+    ];
+  }
+}
+
 const initialState: FinanceState = {
-  monthlySpending: monthlySpendingData,
-  movimientos: installmentsMovimientos, 
-  pagosProgramados: installmentsPagos,
+  movimientosByMonth: {},
+  movimientosByAccount: {},
+  movimientosFetchRequestIdByMonth: {},
   metas: metasGoals,
-  savingsMetas: sampleSavingsMetas,   
+  savingsMetas: [],
   cardWallet: cardWalletData,
-  accounts: sampleAccounts,           
+  accounts: [],
 };
 
 const financeSlice = createSlice({
   name: 'finance',
   initialState,
   reducers: {
-   
     addMovimiento: (state, action: PayloadAction<MovementItem>) => {
-      state.movimientos.unshift(action.payload);
+      addMovementToCaches(state, action.payload);
     },
     addAccount: (state, action: PayloadAction<Account>) => {
       state.accounts.push(action.payload);
@@ -271,11 +411,24 @@ const financeSlice = createSlice({
  
   extraReducers: (builder) => {
     builder
+      .addCase(fetchAccountsThunk.fulfilled, (state, action) => {
+        state.accounts = action.payload;
+      })
+      .addCase(fetchSavingsMetasThunk.fulfilled, (state, action) => {
+        state.savingsMetas = action.payload;
+      })
       .addCase(createNewAccountThunk.fulfilled, (state, action) => {
-        state.accounts.push(action.payload);
+        const exists = state.accounts.some((account) => account.id === action.payload.id);
+        if (!exists) {
+          state.accounts.push(action.payload);
+        }
       })
       .addCase(addMovimientoThunk.fulfilled, (state, action) => {
-        state.movimientos.unshift(action.payload);
+        addMovementToCaches(state, action.payload);
+      })
+      .addCase(updateMovimientoThunk.fulfilled, (state, action) => {
+        removeMovementFromCaches(state, action.payload.id);
+        addMovementToCaches(state, action.payload);
       })
       .addCase(addSavingsMetaThunk.fulfilled, (state, action) => {
         state.savingsMetas.unshift(action.payload);
@@ -286,8 +439,19 @@ const financeSlice = createSlice({
           state.savingsMetas[index] = action.payload;
         }
       })
+      .addCase(fetchMovimientosByMonthThunk.pending, (state, action) => {
+        state.movimientosFetchRequestIdByMonth[action.meta.arg] = action.meta.requestId;
+      })
       .addCase(fetchMovimientosByMonthThunk.fulfilled, (state, action) => {
-        state.movimientos = action.payload;
+        const { monthKey, movimientos } = action.payload;
+        if (state.movimientosFetchRequestIdByMonth[monthKey] !== action.meta.requestId) {
+          return;
+        }
+        state.movimientosByMonth[monthKey] = movimientos;
+      })
+      .addCase(fetchMovimientosByAccountThunk.fulfilled, (state, action) => {
+        const { accountId, movimientos } = action.payload;
+        state.movimientosByAccount[accountId] = movimientos;
       });
   },
 });

@@ -177,7 +177,7 @@ export default function NuevaCuentaScreen({ navigation }: Props) {
   await dispatch(createNewAccountThunk({
     name: name.trim(),
     subtitle: subtitle.trim(),
-    type: accountType as 'cash' | 'savings' | 'credit_card', 
+    type: accountType,
     balance: parsedBalance,
     color: CHART_COLORS[colorIndex],
     ...(accountType === 'credit_card' ? { brand } : {}),

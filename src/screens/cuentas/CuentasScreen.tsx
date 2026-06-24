@@ -1,6 +1,6 @@
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -13,21 +13,33 @@ import { Account } from '../../constants/sampleData';
 import { spacing } from '../../constants/theme';
 import { useAppSettings } from '../../hooks/useAppSettings';
 import { ThemeColors } from '../../constants/themes';
-import { useAppSelector } from '../../store/hooks';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import {
   selectAccounts,
   selectAccountsNetBalance,
 } from '../../store/selectors/financeSelectors';
+import { fetchAccountsThunk } from '../../store/slices/financeSlice';
 import { formatLPS } from '../../utils/currency';
 import { RootStackParamList } from '../../types/navigation';
 
 export default function CuentasScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const dispatch = useAppDispatch();
   const { colors } = useAppSettings();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   const accounts = useAppSelector(selectAccounts);
   const totalBalance = useAppSelector(selectAccountsNetBalance);
+
+  const loadAccounts = useCallback(() => {
+    dispatch(fetchAccountsThunk());
+  }, [dispatch]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadAccounts();
+    }, [loadAccounts])
+  );
 
   const handleOpenSettings = () => {
     navigation.navigate('Configuracion');

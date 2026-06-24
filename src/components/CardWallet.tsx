@@ -3,21 +3,27 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
-import { useAppSettings } from '../hooks/useAppSettings';
 import { CardWalletData } from '../constants/sampleData';
-import { ThemeColors } from '../constants/themes';
 import { radius, shadows, spacing } from '../constants/theme';
 import { formatLPS } from '../utils/currency';
 import CardBrandLogo from './CardBrandLogo';
 import { Text } from './ui';
+
+const CARD_TEXT = {
+  label: '#6B7280',
+  balance: '#111827',
+  icon: '#6B7280',
+} as const;
+
+// Proporción estándar de tarjeta de crédito (85.6 × 54 mm)
+const CARD_ASPECT_RATIO = 85.6 / 53.98;
 
 type Props = {
   wallet: CardWalletData;
 };
 
 export default function CardWallet({ wallet }: Props) {
-  const { colors } = useAppSettings();
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const styles = useMemo(() => createStyles(), []);
   const [showBalance, setShowBalance] = useState(true);
 
   const displayBalance = showBalance ? formatLPS(wallet.usedBalance) : '••••••';
@@ -34,7 +40,9 @@ export default function CardWallet({ wallet }: Props) {
           <CardBrandLogo brand={wallet.brand} />
 
           <View style={styles.balanceBlock}>
-            <Text style={styles.balanceLabel}>Saldo utilizado</Text>
+            <Text style={styles.balanceLabel}>
+              {wallet.balanceLabel ?? 'Saldo utilizado'}
+            </Text>
             <View style={styles.balanceRow}>
               <Text style={styles.balance}>{displayBalance}</Text>
               <Pressable
@@ -46,7 +54,7 @@ export default function CardWallet({ wallet }: Props) {
                 <Ionicons
                   name={showBalance ? 'eye-outline' : 'eye-off-outline'}
                   size={18}
-                  color={colors.mutedForeground}
+                  color={CARD_TEXT.icon}
                 />
               </Pressable>
             </View>
@@ -57,17 +65,18 @@ export default function CardWallet({ wallet }: Props) {
   );
 }
 
-const createStyles = (colors: ThemeColors) =>
+const createStyles = () =>
   StyleSheet.create({
     wallet: {
       marginBottom: spacing.lg,
     },
     card: {
+      width: '100%',
+      aspectRatio: CARD_ASPECT_RATIO,
       borderRadius: radius.xl,
       paddingHorizontal: spacing.xl,
       paddingVertical: spacing.xl,
-      minHeight: 160,
-      justifyContent: 'center',
+      justifyContent: 'flex-start',
       ...shadows.card,
     },
     topRow: {
@@ -80,7 +89,7 @@ const createStyles = (colors: ThemeColors) =>
       gap: 4,
     },
     balanceLabel: {
-      color: colors.mutedForeground,
+      color: CARD_TEXT.label,
       fontSize: 11,
       fontWeight: '600',
       letterSpacing: 0.8,
@@ -92,7 +101,7 @@ const createStyles = (colors: ThemeColors) =>
       gap: spacing.sm,
     },
     balance: {
-      color: colors.foreground,
+      color: CARD_TEXT.balance,
       fontSize: 22,
       fontWeight: '700',
       letterSpacing: -0.5,

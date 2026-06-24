@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   KeyboardAvoidingView,
@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { addMovimientoThunk } from '../../store/slices/financeSlice';
+import { addMovimientoThunk, updateMovimientoThunk } from '../../store/slices/financeSlice';
 import CustomButton from '../../components/CustomButton';
 import ScreenHeader from '../../components/ScreenHeader';
 import { Tabs, TabsList, TabsTrigger, Text } from '../../components/ui';
@@ -24,8 +24,14 @@ import {
 import { radius, spacing } from '../../constants/theme';
 import { useAppSettings } from '../../hooks/useAppSettings';
 import { ThemeColors } from '../../constants/themes';
-import { useAppDispatch } from '../../store/hooks';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { selectAccounts, selectMovimientoById } from '../../store/selectors/financeSelectors';
 import { RootStackParamList } from '../../types/navigation';
+import { parseDDMMYYYYtoYYYYMMDD, parseYYYYMMDDToDDMMYYYY } from '../../utils/date';
+import {
+  buildCategoryWithNotes,
+  splitCategoryAndNotes,
+} from '../../utils/movimientos';
 import {
   isRequired,
   isValidAmount,
@@ -45,14 +51,6 @@ function formatToday(): string {
   const month = String(today.getMonth() + 1).padStart(2, '0');
   const year = today.getFullYear();
   return `${day}/${month}/${year}`;
-}
-
-function parseDDMMYYYYtoYYYYMMDD(dateStr: string): string {
-  const parts = dateStr.split('/');
-  if (parts.length === 3) {
-    return `${parts[2]}-${parts[1]}-${parts[0]}`;
-  }
-  return dateStr;
 }
 
 type FormFieldProps = {
@@ -146,10 +144,15 @@ function ChipSelector({ label, options, value, onChange, error, colors }: ChipSe
   );
 }
 
-export default function RegistrarMovimientoScreen({ navigation }: Props) {
+export default function RegistrarMovimientoScreen({ navigation, route }: Props) {
+  const movimientoId = route.params?.movimientoId;
+  const isEditing = Boolean(movimientoId);
   const dispatch = useAppDispatch();
   const { colors } = useAppSettings();
   const styles = useMemo(() => createStyles(colors), [colors]);
+
+  const existingMovement = useAppSelector(selectMovimientoById(movimientoId ?? ''));
+  const accounts = useAppSelector(selectAccounts);
 
   const [transactionType, setTransactionType] = useState<TransactionType>('gasto');
   const [amount, setAmount] = useState('');
@@ -160,6 +163,35 @@ export default function RegistrarMovimientoScreen({ navigation }: Props) {
   const [dueDate, setDueDate] = useState('');
   const [notes, setNotes] = useState('');
   const [errors, setErrors] = useState<FormErrors>({});
+
+  useEffect(() => {
+    if (!existingMovement) {
+      return;
+    }
+
+    const { category: baseCategory, notes: movementNotes } = splitCategoryAndNotes(
+      existingMovement.category
+    );
+
+    setTransactionType(existingMovement.amount < 0 ? 'gasto' : 'ingreso');
+    setAmount(String(Math.abs(existingMovement.amount)));
+    setMerchant(existingMovement.merchant);
+    setCategory(baseCategory);
+    setBankAccount(existingMovement.bankAccount);
+    setDate(
+      existingMovement.date
+        ? parseYYYYMMDDToDDMMYYYY(existingMovement.date)
+        : formatToday()
+    );
+    setDueDate(String(existingMovement.dueDate));
+    setNotes(movementNotes);
+    setErrors({});
+  }, [existingMovement]);
+
+  const bankAccountOptions = useMemo(() => {
+    const accountNames = accounts.map((account) => account.name);
+    return [...new Set([...accountNames, ...BANK_ACCOUNTS, bankAccount].filter(Boolean))];
+  }, [accounts, bankAccount]);
 
   const categories =
     transactionType === 'gasto' ? EXPENSE_CATEGORIES : INCOME_CATEGORIES;
@@ -215,24 +247,53 @@ export default function RegistrarMovimientoScreen({ navigation }: Props) {
     const signedAmount = transactionType === 'gasto' ? -parsedAmount : parsedAmount;
     const dueDay = dueDate.trim() ? Number.parseInt(dueDate, 10) : new Date().getDate();
     const formattedDbDate = parseDDMMYYYYtoYYYYMMDD(date);
+    const payload = {
+      merchant: merchant.trim(),
+      category: buildCategoryWithNotes(category, notes),
+      bankAccount,
+      amount: signedAmount,
+      dueDate: dueDay,
+      date: formattedDbDate,
+    };
 
     try {
-      await dispatch(addMovimientoThunk({
-        merchant: merchant.trim(),
-        category: notes.trim() ? `${category} · ${notes.trim()}` : category,
-        bankAccount,
-        amount: signedAmount,
-        dueDate: dueDay,
-        date: formattedDbDate,
-      })).unwrap();
+      if (isEditing && movimientoId) {
+        await dispatch(
+          updateMovimientoThunk({
+            id: movimientoId,
+            ...payload,
+          })
+        ).unwrap();
+
+        Alert.alert('Cambios guardados', 'El movimiento se actualizó correctamente.', [
+          { text: 'OK', onPress: () => navigation.goBack() },
+        ]);
+        return;
+      }
+
+      await dispatch(addMovimientoThunk(payload)).unwrap();
 
       Alert.alert('Registro guardado', 'El movimiento fue procesado con éxito.', [
         { text: 'OK', onPress: () => navigation.goBack() },
       ]);
     } catch (error) {
-      Alert.alert('Error', 'No se pudo registrar la transacción.');
+      Alert.alert(
+        'Error',
+        isEditing ? 'No se pudo actualizar la transacción.' : 'No se pudo registrar la transacción.'
+      );
     }
   };
+
+  if (isEditing && !existingMovement) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <ScreenHeader title="Editar registro" onBackPress={() => navigation.goBack()} />
+        <Text variant="muted" style={styles.notFound}>
+          No se encontró el movimiento solicitado.
+        </Text>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -245,7 +306,10 @@ export default function RegistrarMovimientoScreen({ navigation }: Props) {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          <ScreenHeader title="Nuevo registro" onBackPress={() => navigation.goBack()} />
+          <ScreenHeader
+            title={isEditing ? 'Editar registro' : 'Nuevo registro'}
+            onBackPress={() => navigation.goBack()}
+          />
 
           <Tabs value={transactionType} onValueChange={handleTypeChange}>
             <TabsList>
@@ -287,7 +351,7 @@ export default function RegistrarMovimientoScreen({ navigation }: Props) {
 
             <ChipSelector
               label="Cuenta bancaria"
-              options={BANK_ACCOUNTS}
+              options={bankAccountOptions}
               value={bankAccount}
               onChange={setBankAccount}
               error={errors.bankAccount}
@@ -327,7 +391,13 @@ export default function RegistrarMovimientoScreen({ navigation }: Props) {
           </View>
 
           <CustomButton
-            title={transactionType === 'gasto' ? 'Registrar gasto' : 'Registrar ingreso'}
+            title={
+              isEditing
+                ? 'Guardar cambios'
+                : transactionType === 'gasto'
+                  ? 'Registrar gasto'
+                  : 'Registrar ingreso'
+            }
             onPress={handleSubmit}
           />
         </ScrollView>
@@ -408,5 +478,10 @@ const createStyles = (colors: ThemeColors) =>
     form: {
       marginTop: spacing.lg,
       gap: spacing.lg,
+    },
+    notFound: {
+      textAlign: 'center',
+      marginTop: spacing.xl,
+      paddingHorizontal: spacing.lg,
     },
   });

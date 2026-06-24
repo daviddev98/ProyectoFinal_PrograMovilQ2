@@ -1,6 +1,6 @@
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -12,17 +12,29 @@ import { SavingsMeta } from '../../constants/sampleData';
 import { spacing } from '../../constants/theme';
 import { useAppSettings } from '../../hooks/useAppSettings';
 import { ThemeColors } from '../../constants/themes';
-import { useAppSelector } from '../../store/hooks';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { selectSavingsMetas } from '../../store/selectors/financeSelectors';
+import { fetchSavingsMetasThunk } from '../../store/slices/financeSlice';
 import { RootStackParamList } from '../../types/navigation';
 import { getMetaProgress } from '../../utils/metas';
 
 export default function MetasScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const dispatch = useAppDispatch();
   const { colors } = useAppSettings();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   const metas = useAppSelector(selectSavingsMetas);
+
+  const loadMetas = useCallback(() => {
+    dispatch(fetchSavingsMetasThunk());
+  }, [dispatch]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadMetas();
+    }, [loadMetas])
+  );
 
   const activeCount = metas.filter((meta) => meta.estado === 'activa').length;
   const averageProgress =

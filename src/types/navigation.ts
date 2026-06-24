@@ -2,7 +2,7 @@ export type RootStackParamList = {
   Login: undefined;
   MainTabs: undefined;
   Configuracion: undefined;
-  RegistroMovimiento: undefined;
+  RegistroMovimiento: { movimientoId?: string } | undefined;
   Register: undefined;
   CuentasDetalle: { accountId: string };
   NuevaCuenta: undefined;

@@ -1,6 +1,6 @@
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { fetchMovimientosByMonthThunk } from '../../store/slices/financeSlice';
@@ -9,16 +9,16 @@ import MonthSelector from '../../components/MonthSelector';
 import ScreenHeader from '../../components/ScreenHeader';
 import SpendingChart from '../../components/SpendingChart';
 import StatCard from '../../components/StatCard';
+import { MovementItem } from '../../constants/sampleData';
 import { Tabs, TabsContent, TabsList, TabsTrigger, Text } from '../../components/ui';
 import { radius, spacing } from '../../constants/theme';
 import { useAppSettings } from '../../hooks/useAppSettings';
 import { ThemeColors } from '../../constants/themes';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import {
-  selectAvailableMonthKeys,
-  selectMonthSpendingData,
-  selectMovimientos,
-  selectPagosProgramados,
+  selectMonthStatistics,
+  selectMovimientosByMonth,
+  selectPagosProgramadosByMonth,
 } from '../../store/selectors/financeSelectors';
 import {
   selectInicioActiveTab,
@@ -45,26 +45,29 @@ export default function InicioScreen() {
 
   const activeTab = useAppSelector(selectInicioActiveTab);
   const selectedMonthKey = useAppSelector(selectInicioSelectedMonthKey);
-  const availableMonthKeys = useAppSelector(selectAvailableMonthKeys);
-  const monthData = useAppSelector(selectMonthSpendingData(selectedMonthKey));
-  const movimientos = useAppSelector(selectMovimientos);
-  const pagosProgramados = useAppSelector(selectPagosProgramados);
+  const monthData = useAppSelector(selectMonthStatistics(selectedMonthKey));
+  const movimientos = useAppSelector(selectMovimientosByMonth(selectedMonthKey));
+  const pagosProgramados = useAppSelector(selectPagosProgramadosByMonth(selectedMonthKey));
 
   const selectedMonth = useMemo(() => monthKeyToDate(selectedMonthKey), [selectedMonthKey]);
-
-  const monthKey = selectedMonthKey;
-  const currentMonthIndex = availableMonthKeys.indexOf(monthKey);
-  const canGoPrev = currentMonthIndex > 0;
-  const canGoNext =
-    currentMonthIndex !== -1 && currentMonthIndex < availableMonthKeys.length - 1;
 
   const handleOpenSettings = () => {
     navigation.navigate('Configuracion');
   };
 
-  React.useEffect(() => {
+  const loadMovimientos = useCallback(() => {
     dispatch(fetchMovimientosByMonthThunk(selectedMonthKey));
-  }, [selectedMonthKey, dispatch]);
+  }, [dispatch, selectedMonthKey]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadMovimientos();
+    }, [loadMovimientos])
+  );
+
+  const handleMovementPress = (movement: MovementItem) => {
+    navigation.navigate('RegistroMovimiento', { movimientoId: movement.id });
+  };
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -82,8 +85,6 @@ export default function InicioScreen() {
         <MonthSelector
           selectedDate={selectedMonth}
           onChange={(date) => dispatch(setInicioSelectedMonthKey(getMonthKey(date)))}
-          canGoPrev={canGoPrev}
-          canGoNext={canGoNext}
         />
 
         <Text variant="label">Gasto total</Text>
@@ -116,15 +117,35 @@ export default function InicioScreen() {
             </TabsList>
 
             <TabsContent value="movimientos">
-              {movimientos.map((item) => (
-                <InstallmentCard key={item.id} item={item} />
-              ))}
+              {movimientos.length > 0 ? (
+                movimientos.map((item) => (
+                  <InstallmentCard
+                    key={item.id}
+                    item={item}
+                    onPress={() => handleMovementPress(item)}
+                  />
+                ))
+              ) : (
+                <Text variant="muted" style={styles.emptyText}>
+                  No hay movimientos registrados en este mes.
+                </Text>
+              )}
             </TabsContent>
 
             <TabsContent value="pagos-programados">
-              {pagosProgramados.map((item) => (
-                <InstallmentCard key={item.id} item={item} />
-              ))}
+              {pagosProgramados.length > 0 ? (
+                pagosProgramados.map((item) => (
+                  <InstallmentCard
+                    key={item.id}
+                    item={item}
+                    onPress={() => handleMovementPress(item)}
+                  />
+                ))
+              ) : (
+                <Text variant="muted" style={styles.emptyText}>
+                  No hay pagos programados en este mes.
+                </Text>
+              )}
             </TabsContent>
           </Tabs>
         </View>
@@ -163,5 +184,9 @@ const createStyles = (colors: ThemeColors) =>
       borderTopRightRadius: radius.xl,
       padding: spacing.lg,
       minHeight: 320,
+    },
+    emptyText: {
+      textAlign: 'center',
+      marginTop: spacing.md,
     },
   });

@@ -38,7 +38,8 @@ export type MovementItem = {
   bankAccount: string;
   amount: number;
   dueDate: number;
-  image: ImageSourcePropType;
+  image?: ImageSourcePropType;
+  date?: string;
 };
 
 export type GoalItem = {
@@ -57,6 +58,7 @@ export type CardBrand = 'mastercard' | 'visa' | 'amex';
 export type CardWalletData = {
   brand: CardBrand;
   usedBalance: number;
+  balanceLabel?: string;
 };
 
 export type AccountType = 'bank' | 'credit_card' | 'cash';
@@ -195,51 +197,6 @@ export const cardWalletData: CardWalletData = {
   usedBalance: 3017.44,
 };
 
-export const sampleAccounts: Account[] = [
-  {
-    id: 'acc-banpais',
-    name: 'Banpais',
-    subtitle: 'Cuenta planilla',
-    type: 'bank',
-    balance: 13198.72,
-    color: '#F59E0B',
-  },
-  {
-    id: 'acc-bac',
-    name: 'BAC',
-    subtitle: 'Cuenta personal',
-    type: 'bank',
-    balance: 3723.41,
-    color: '#EF4444',
-  },
-  {
-    id: 'acc-efectivo',
-    name: 'Efectivo',
-    subtitle: 'Master Card',
-    type: 'credit_card',
-    balance: 2058.12,
-    color: '#22C55E',
-    brand: 'mastercard',
-  },
-  {
-    id: 'acc-bac-hon',
-    name: 'BAC HON',
-    subtitle: 'Tarjeta crédito',
-    type: 'credit_card',
-    balance: 1102.0,
-    color: '#3B82F6',
-    brand: 'mastercard',
-  },
-  {
-    id: 'acc-ficohsa',
-    name: 'Ficohsa',
-    subtitle: 'Cuenta ahorro',
-    type: 'bank',
-    balance: 83.0,
-    color: '#E5E7EB',
-  },
-];
-
 export const META_CATEGORIES = [
   'Ahorro',
   'Viaje',
@@ -282,74 +239,6 @@ export type SavingsMeta = {
   estado: MetaStatus;
   notas: string;
 };
-
-export const sampleSavingsMetas: SavingsMeta[] = [
-  {
-    id: 'meta-1',
-    nombre: 'Fondo de emergencia',
-    descripcion: 'Ahorrar el equivalente a 3 meses de gastos para imprevistos.',
-    categoria: 'Emergencia',
-    montoObjetivo: 50000,
-    montoActual: 32500,
-    fechaInicio: '01/01/2026',
-    fechaLimite: '31/12/2026',
-    prioridad: 'alta',
-    estado: 'activa',
-    notas: 'Transferir L 2,500 cada quincena desde la cuenta planilla.',
-  },
-  {
-    id: 'meta-2',
-    nombre: 'Viaje a Roatán',
-    descripcion: 'Vacaciones familiares en la isla durante Semana Santa.',
-    categoria: 'Viaje',
-    montoObjetivo: 18000,
-    montoActual: 7200,
-    fechaInicio: '15/02/2026',
-    fechaLimite: '10/04/2026',
-    prioridad: 'media',
-    estado: 'activa',
-    notas: 'Incluye vuelos, hotel y actividades acuáticas.',
-  },
-  {
-    id: 'meta-3',
-    nombre: 'Laptop para trabajo',
-    descripcion: 'Equipo nuevo para proyectos freelance y clases.',
-    categoria: 'Tecnología',
-    montoObjetivo: 35000,
-    montoActual: 35000,
-    fechaInicio: '01/03/2026',
-    fechaLimite: '30/06/2026',
-    prioridad: 'alta',
-    estado: 'completada',
-    notas: 'Modelo con 16 GB RAM y SSD de 512 GB.',
-  },
-  {
-    id: 'meta-4',
-    nombre: 'Enganche apartamento',
-    descripcion: 'Ahorro inicial para compra de vivienda propia.',
-    categoria: 'Vivienda',
-    montoObjetivo: 120000,
-    montoActual: 28500,
-    fechaInicio: '01/01/2025',
-    fechaLimite: '31/12/2027',
-    prioridad: 'alta',
-    estado: 'activa',
-    notas: 'Meta a largo plazo. Revisar avance cada trimestre.',
-  },
-  {
-    id: 'meta-5',
-    nombre: 'Curso de inglés',
-    descripcion: 'Certificación internacional para mejorar oportunidades laborales.',
-    categoria: 'Educación',
-    montoObjetivo: 8500,
-    montoActual: 2100,
-    fechaInicio: '01/06/2026',
-    fechaLimite: '15/09/2026',
-    prioridad: 'media',
-    estado: 'pausada',
-    notas: 'Pausada hasta definir horario en el nuevo empleo.',
-  },
-];
 
 export const metasGoals: GoalItem[] = [
   {

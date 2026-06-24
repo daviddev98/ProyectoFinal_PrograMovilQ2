@@ -21,13 +21,21 @@ const CHART_HEIGHT = 140;
 const PADDING = 16;
 
 function buildPath(data: ChartPoint[]) {
-  const values = data.map((point) => point.value);
+  const safeData =
+    data.length >= 2
+      ? data
+      : [
+          { label: '', value: 0 },
+          { label: '', value: data[0]?.value ?? 0 },
+        ];
+
+  const values = safeData.map((point) => point.value);
   const min = Math.min(...values);
   const max = Math.max(...values);
   const range = max - min || 1;
-  const stepX = (CHART_WIDTH - PADDING * 2) / (data.length - 1);
+  const stepX = (CHART_WIDTH - PADDING * 2) / (safeData.length - 1);
 
-  const points = data.map((point, index) => {
+  const points = safeData.map((point, index) => {
     const x = PADDING + index * stepX;
     const y = CHART_HEIGHT - PADDING - ((point.value - min) / range) * (CHART_HEIGHT - PADDING * 2);
     return { x, y };
@@ -80,8 +88,8 @@ export default function SpendingChart({
   );
 
   const { points, linePath, areaPath } = buildPath(data);
-  const highlightIndex = Math.floor(data.length / 2);
-  const highlightPoint = points[highlightIndex];
+  const highlightIndex = Math.max(0, Math.floor(data.length / 2));
+  const highlightPoint = points[highlightIndex] ?? points[points.length - 1];
 
   return (
     <View style={styles.wrapper}>

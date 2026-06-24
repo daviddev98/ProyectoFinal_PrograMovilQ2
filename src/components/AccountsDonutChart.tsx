@@ -37,11 +37,31 @@ function describeDonutSlice(
   startAngle: number,
   endAngle: number
 ) {
+  const sweep = endAngle - startAngle;
+
+  // SVG arcs cannot draw a full 360° segment (start and end coincide).
+  if (sweep >= 359.99) {
+    const outerStart = polarToCartesian(cx, cy, outerR, startAngle);
+    const outerMid = polarToCartesian(cx, cy, outerR, startAngle + 180);
+    const innerStart = polarToCartesian(cx, cy, innerR, startAngle);
+    const innerMid = polarToCartesian(cx, cy, innerR, startAngle + 180);
+
+    return [
+      `M ${outerStart.x} ${outerStart.y}`,
+      `A ${outerR} ${outerR} 0 1 1 ${outerMid.x} ${outerMid.y}`,
+      `A ${outerR} ${outerR} 0 1 1 ${outerStart.x} ${outerStart.y}`,
+      `L ${innerMid.x} ${innerMid.y}`,
+      `A ${innerR} ${innerR} 0 1 0 ${innerStart.x} ${innerStart.y}`,
+      `A ${innerR} ${innerR} 0 1 0 ${innerMid.x} ${innerMid.y}`,
+      'Z',
+    ].join(' ');
+  }
+
   const outerStart = polarToCartesian(cx, cy, outerR, startAngle);
   const outerEnd = polarToCartesian(cx, cy, outerR, endAngle);
   const innerEnd = polarToCartesian(cx, cy, innerR, endAngle);
   const innerStart = polarToCartesian(cx, cy, innerR, startAngle);
-  const largeArc = endAngle - startAngle <= 180 ? 0 : 1;
+  const largeArc = sweep <= 180 ? 0 : 1;
 
   return [
     `M ${outerStart.x} ${outerStart.y}`,

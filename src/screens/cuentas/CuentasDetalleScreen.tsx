@@ -1,46 +1,74 @@
-import React, { useMemo } from 'react';
-import { Alert, ScrollView, StyleSheet, View } from 'react-native';
+import React, { useCallback, useMemo } from 'react';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import CardWallet from '../../components/CardWallet';
-import GoalCard from '../../components/GoalCard';
+import InstallmentCard from '../../components/InstallmentCard';
 import ScreenHeader from '../../components/ScreenHeader';
 import { Text } from '../../components/ui';
+import { MovementItem, CardWalletData } from '../../constants/sampleData';
 import { spacing } from '../../constants/theme';
-import { CardWalletData } from '../../constants/sampleData';
 import { useAppSettings } from '../../hooks/useAppSettings';
 import { ThemeColors } from '../../constants/themes';
-import { useAppSelector } from '../../store/hooks';
-import { selectAccountById, selectMetas } from '../../store/selectors/financeSelectors';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import {
+  selectAccountById,
+  selectMovimientosByAccount,
+} from '../../store/selectors/financeSelectors';
+import { fetchMovimientosByAccountThunk } from '../../store/slices/financeSlice';
 import { RootStackParamList } from '../../types/navigation';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'CuentasDetalle'>;
 
 export default function CuentasDetalleScreen({ navigation, route }: Props) {
   const { accountId } = route.params;
+  const dispatch = useAppDispatch();
   const { colors } = useAppSettings();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   const account = useAppSelector(selectAccountById(accountId));
-  const metas = useAppSelector(selectMetas);
+  const movimientos = useAppSelector(selectMovimientosByAccount(accountId));
 
   const wallet: CardWalletData = useMemo(() => {
     if (account?.type === 'credit_card' && account.brand) {
       return {
         brand: account.brand,
         usedBalance: account.balance,
+        balanceLabel: 'Saldo utilizado',
       };
     }
 
     return {
       brand: 'mastercard',
       usedBalance: account?.balance ?? 0,
+      balanceLabel:
+        account?.type === 'bank' ? 'Saldo disponible' : 'Saldo utilizado',
     };
   }, [account]);
 
-  const handlePayPress = (goalName: string) => {
-    Alert.alert('Pagar ahora', `Procesar pago de ${goalName}.`);
+  const loadMovimientos = useCallback(() => {
+    if (!account) {
+      return;
+    }
+
+    dispatch(
+      fetchMovimientosByAccountThunk({
+        accountId: account.id,
+        accountName: account.name,
+      })
+    );
+  }, [account, dispatch]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadMovimientos();
+    }, [loadMovimientos])
+  );
+
+  const handleMovementPress = (movement: MovementItem) => {
+    navigation.navigate('RegistroMovimiento', { movimientoId: movement.id });
   };
 
   if (!account) {
@@ -72,14 +100,20 @@ export default function CuentasDetalleScreen({ navigation, route }: Props) {
           Movimientos
         </Text>
 
-        <View style={styles.goalsList}>
-          {metas.map((item) => (
-            <GoalCard
-              key={item.id}
-              item={item}
-              onPayPress={(goal) => handlePayPress(goal.name)}
-            />
-          ))}
+        <View style={styles.movementsList}>
+          {movimientos.length > 0 ? (
+            movimientos.map((item) => (
+              <InstallmentCard
+                key={item.id}
+                item={item}
+                onPress={() => handleMovementPress(item)}
+              />
+            ))
+          ) : (
+            <Text variant="muted" style={styles.emptyText}>
+              No hay movimientos registrados para esta cuenta.
+            </Text>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -103,8 +137,12 @@ const createStyles = (colors: ThemeColors) =>
       marginBottom: spacing.md,
       fontSize: 20,
     },
-    goalsList: {
-      gap: 0,
+    movementsList: {
+      gap: 12,
+    },
+    emptyText: {
+      textAlign: 'center',
+      marginTop: spacing.md,
     },
     notFound: {
       textAlign: 'center',

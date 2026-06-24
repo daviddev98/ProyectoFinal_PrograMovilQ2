@@ -1,5 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
+import { getMonthKey } from '../../utils/date';
+
 export type UiState = {
   inicioActiveTab: string;
   inicioSelectedMonthKey: string;
@@ -7,7 +9,7 @@ export type UiState = {
 
 const initialState: UiState = {
   inicioActiveTab: 'movimientos',
-  inicioSelectedMonthKey: '2026-06',
+  inicioSelectedMonthKey: getMonthKey(new Date()),
 };
 
 const uiSlice = createSlice({
